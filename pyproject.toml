@@ -1,0 +1,134 @@
+[project]
+name = "notora"
+version = "0.1.0"
+description = "Shared base logic used across AldanDev projects."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = "<3.14,>=3.13"
+authors = [
+    { name = "Ivan Larin", email = "ivan.l@aldandev.com" },
+    { name = "Igor Pavlyukovets", email = "igor.p@aldandev.com" },
+    { name = "Ilia Boiarintsev", email = "ilya.b@aldandev.com" },
+]
+
+dependencies = [
+    "sqlalchemy[asyncio]<3.0.0,>=2.0.44",
+    "pydantic[email]<3.0.0,>=2.12.4",
+]
+
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries",
+]
+
+[project.urls]
+Homepage = "https://pypi.org/project/notora/"
+
+Repository = "https://github.com/AldanDev/Notora"
+Issues = "https://github.com/AldanDev/Notora/issues"
+[dependency-groups]
+lint = [
+    "mypy<2.0.0,>=1.18.2",
+    "ruff<1.0.0,>=0.14.5",
+    "pyright<2.0.0,>=1.1.407",
+]
+tests = [
+    "pytest<10.0.0,>=9.0.1",
+    "pytest-cov<8.0.0,>=7.0.0",
+    "pytest-asyncio<2.0.0,>=1.2.0",
+    "polyfactory<4.0.0,>=3.0.0",
+]
+dev = [
+    "pre-commit<5.0.0,>=4.4.0",
+]
+
+[tool.ruff]
+target-version = "py313"
+exclude = [
+    ".git",
+    "__pycache__",
+]
+line-length = 99
+fix = true
+lint.preview = true
+lint.ignore = [
+    "D10",  # docstrings
+    "D203",  # one-blank-line-before-class
+    "D213",  # multi-line-summary-second-line
+    "D401",  # docstrings imperative mood
+    "COM812",  # missing-trailing-comma
+    "PLW3201",  # bad-dunder-method-name
+]
+lint.select = [
+    "FAST",  # fastapi
+    "B",  # flake8-bugbear
+    "TRY",  # tryceratops
+    "EM",  # flake8-errmsg
+    "C9",  # mccabe
+    "D",  # pycodestyle
+    "F",  # pyflakes
+    "Q",  # flake8-quotes
+    "T20",  # flake8-print
+    "SIM",  # flake8-simplify
+    "ERA",  # flake8-eradicate
+    "DTZ",  # flake8-datetimez
+    "UP",  # pyupgrade
+    "FBT",  # flake8-boolean-trap
+    "I",  # isort
+    "RUF",  # ruff specific
+    "PL",  # pylint
+    "PTH",  # flake8-use-pathlib
+    "PIE",  # flake8-pie
+    "G",  # flake8-logging-format
+    "C4",  # flake8-comprehensions
+    "N",  # pep8-naming
+    "COM",  # flake8-commas
+    "ASYNC",  # flake8-async
+    "PGH",  # pygrep-hooks
+    "FURB",  # refurb
+]
+format.preview = true
+format.quote-style = "single"
+lint.mccabe.max-complexity = 6
+lint.pylint.max-positional-args = 7
+lint.pylint.max-args = 10
+lint.flake8-quotes.inline-quotes = "single"
+lint.flake8-implicit-str-concat.allow-multiline = false
+lint.per-file-ignores = { "__init__.py" = ["F401", "F403"], "**/test_*.py" = ["PLR091"] }
+
+[tool.pyright]
+pythonVersion = "3.13"
+typeCheckingMode = "basic"
+include = [
+    "src",
+]
+exclude = [
+    ".git",
+    "__pycache__",
+]
+ignore = []
+defineConstant = { DEBUG = true }
+reportMissingImports = true
+reportMissingTypeStubs = false
+
+[tool.mypy]
+python_version = 3.13
+plugins = "pydantic.mypy"
+explicit_package_bases = true
+pretty = true
+show_error_context = true
+strict = true
+no_implicit_reexport = true
+ignore_missing_imports = true
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/notora"]

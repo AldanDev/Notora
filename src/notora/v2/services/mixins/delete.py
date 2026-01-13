@@ -4,8 +4,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from notora.v2.models.base import GenericBaseModel
 
+from ...repositories.base import SoftDeleteRepositoryProtocol
 from ...repositories.types import FilterSpec
-from .accessors import RepositoryAccessorMixin, SoftDeleteRepositoryProtocol
+from .accessors import RepositoryAccessorMixin
 from .executor import SessionExecutorMixin
 
 

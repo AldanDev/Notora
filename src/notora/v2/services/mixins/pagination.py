@@ -5,8 +5,7 @@ from sqlalchemy import Executable
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from notora.persistence.models.base import GenericBaseModel
-from notora.schemas.base import BaseResponseSchema, PaginatedResponseSchema
-from notora.utils.pagination import calculate_pagination
+from notora.schemas.base import BaseResponseSchema, PaginatedResponseSchema, PaginationMetaSchema
 
 from ...repositories.types import FilterSpec, OptionSpec, OrderSpec
 from .listing import ListingServiceMixin
@@ -37,7 +36,7 @@ class PaginationServiceMixin[PKType, ModelType: GenericBaseModel](
         serialized = self.serialize_many(data, schema=schema)
         total_query = self.repo.count(filters=filters)
         total = (await session.execute(total_query)).scalar_one()
-        meta = calculate_pagination(total=total, limit=limit, offset=offset)
+        meta = PaginationMetaSchema.calculate(total=total, limit=limit, offset=offset)
         return PaginatedResponseSchema(meta=meta, data=serialized)
 
     async def build_pagination_from_queries(
@@ -53,5 +52,5 @@ class PaginationServiceMixin[PKType, ModelType: GenericBaseModel](
         data = await session.scalars(data_query)
         serialized = self.serialize_many(data, schema=schema)
         total = (await session.execute(count_query)).scalar_one()
-        meta = calculate_pagination(total=total, limit=limit, offset=offset)
+        meta = PaginationMetaSchema.calculate(total=total, limit=limit, offset=offset)
         return PaginatedResponseSchema(meta=meta, data=serialized)

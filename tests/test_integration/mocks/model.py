@@ -1,0 +1,14 @@
+from sqlalchemy.orm import Mapped
+
+from notora.persistence.models.base import BaseModel
+from tests.factories.base import SQLAlchemyBaseModelFactory
+
+
+class User(BaseModel): ...
+
+
+class MockModel(BaseModel):
+    name: Mapped[str]
+
+
+class MockModelFactory(SQLAlchemyBaseModelFactory[MockModel]): ...

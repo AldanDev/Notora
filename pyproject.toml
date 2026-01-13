@@ -10,12 +10,6 @@ authors = [
     { name = "Igor Pavlyukovets", email = "igor.p@aldandev.com" },
     { name = "Ilia Boiarintsev", email = "ilya.b@aldandev.com" },
 ]
-
-dependencies = [
-    "sqlalchemy[asyncio]<3.0.0,>=2.0.44",
-    "pydantic[email]<3.0.0,>=2.12.4",
-]
-
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -26,12 +20,16 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Libraries",
 ]
+dependencies = [
+    "sqlalchemy[asyncio]<3.0.0,>=2.0.44",
+    "pydantic[email]<3.0.0,>=2.12.4",
+]
 
 [project.urls]
 Homepage = "https://pypi.org/project/notora/"
-
 Repository = "https://github.com/AldanDev/Notora"
 Issues = "https://github.com/AldanDev/Notora/issues"
+
 [dependency-groups]
 lint = [
     "mypy<2.0.0,>=1.18.2",
@@ -39,6 +37,8 @@ lint = [
     "pyright<2.0.0,>=1.1.407",
 ]
 tests = [
+    "asyncpg<1.0.0,>=0.30.0",
+    "faker<41.0.0,>=40.1.0",
     "pytest<10.0.0,>=9.0.1",
     "pytest-cov<8.0.0,>=7.0.0",
     "pytest-asyncio<2.0.0,>=1.2.0",
@@ -116,6 +116,12 @@ ignore = []
 defineConstant = { DEBUG = true }
 reportMissingImports = true
 reportMissingTypeStubs = false
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+testpaths = ["tests"]
 
 [tool.mypy]
 python_version = 3.13

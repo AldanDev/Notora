@@ -23,8 +23,15 @@ sync:
 test:
 	$(pytest)
 
+.PHONY: test-docker
+test-docker: docker-test
+
 .PHONY: lint-python
 lint-python: python-lint
+
+.PHONY: docker-test
+docker-test:
+	docker compose -f docker-compose.test.yaml up --build --exit-code-from tests
 
 .PHONY: python-lint
 python-lint:

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from notora.persistence.models.base import GenericBaseModel
 
 from .mixins import (

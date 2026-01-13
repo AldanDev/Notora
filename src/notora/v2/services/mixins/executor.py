@@ -5,8 +5,8 @@ from sqlalchemy import exc
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.selectable import TypedReturnsRows
 
-from notora.exceptions.common import AlreadyExistsError, FKNotFoundError, NotFoundError
-from notora.persistence.models.base import GenericBaseModel
+from notora.v2.exceptions.common import AlreadyExistsError, FKNotFoundError, NotFoundError
+from notora.v2.models.base import GenericBaseModel
 
 
 class SessionExecutorMixin[PKType, ModelType: GenericBaseModel]:

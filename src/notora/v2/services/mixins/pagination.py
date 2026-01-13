@@ -4,8 +4,12 @@ from typing import Literal
 from sqlalchemy import Executable
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from notora.persistence.models.base import GenericBaseModel
-from notora.schemas.base import BaseResponseSchema, PaginatedResponseSchema, PaginationMetaSchema
+from notora.v2.models.base import GenericBaseModel
+from notora.v2.schemas.base import (
+    BaseResponseSchema,
+    PaginatedResponseSchema,
+    PaginationMetaSchema,
+)
 
 from ...repositories.types import FilterSpec, OptionSpec, OrderSpec
 from .listing import ListingServiceMixin

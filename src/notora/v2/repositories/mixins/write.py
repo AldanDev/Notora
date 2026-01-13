@@ -7,8 +7,8 @@ from sqlalchemy.orm import InstrumentedAttribute
 from sqlalchemy.sql.dml import ReturningInsert
 from sqlalchemy.sql.selectable import TypedReturnsRows
 
-from notora.persistence.models.base import GenericBaseModel
 from notora.utils.validation import validate_exclusive_presence
+from notora.v2.models.base import GenericBaseModel
 
 from ..types import FilterSpec, OptionSpec
 from .query import FilterableMixin, LoadOptionsMixin, PrimaryKeyMixin

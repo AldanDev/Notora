@@ -29,9 +29,9 @@ from sqlalchemy.sql.dml import ReturningInsert
 from sqlalchemy.sql.functions import now
 from sqlalchemy.sql.selectable import TypedReturnsRows
 
-from notora.enums.base import OrderByDirections
-from notora.persistence.models.base import BaseModel, GenericBaseModel
-from notora.schemas.base import Filter, OrderBy, OrFilterGroup
+from notora.v1.enums.base import OrderByDirections
+from notora.v1.models.base import BaseModel, GenericBaseModel
+from notora.v1.schemas.base import Filter, OrderBy, OrFilterGroup
 
 type Filters = Filter | OrFilterGroup
 

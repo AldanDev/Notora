@@ -5,7 +5,7 @@ from sqlalchemy import Select, func, select
 from sqlalchemy.orm import InstrumentedAttribute
 from sqlalchemy.sql.base import ExecutableOption
 
-from notora.persistence.models.base import GenericBaseModel
+from notora.v2.models.base import GenericBaseModel
 
 from ..types import (
     FilterClause,

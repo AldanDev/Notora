@@ -6,8 +6,8 @@ from polyfactory.factories.pydantic_factory import ModelFactory
 from polyfactory.factories.sqlalchemy_factory import SQLAlchemyFactory
 from pydantic import BaseModel as PydanticBaseModel
 
-from notora.persistence.models.base import BaseModel as SQLAlchemyBaseModel
-from notora.schemas.base import BaseRequestSchema, BaseResponseSchema
+from notora.v1.models.base import BaseModel as SQLAlchemyBaseModel
+from notora.v1.schemas.base import BaseRequestSchema, BaseResponseSchema
 
 _f = Faker()
 

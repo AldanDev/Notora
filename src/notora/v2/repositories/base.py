@@ -1,4 +1,4 @@
-from notora.persistence.models.base import GenericBaseModel
+from notora.v2.models.base import GenericBaseModel
 
 from .mixins import (
     CountableMixin,

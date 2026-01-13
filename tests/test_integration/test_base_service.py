@@ -4,7 +4,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from notora.schemas.base import Filter
+from notora.v1.schemas.base import Filter
 from tests.test_integration.mocks.model import MockModel, MockModelFactory
 from tests.test_integration.mocks.schema import (
     CreateMockModelRequestSchema,

@@ -6,7 +6,7 @@ from sqlalchemy import delete, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute
 
-from notora.persistence.models.base import GenericBaseModel
+from notora.v2.models.base import GenericBaseModel
 
 from .accessors import RepositoryAccessorMixin
 

@@ -10,10 +10,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute
 from sqlalchemy.sql.selectable import TypedReturnsRows
 
-from notora.exceptions.common import AlreadyExistsError, FKNotFoundError, NotFoundError
-from notora.persistence.models.base import BaseModel, GenericBaseModel
-from notora.persistence.repos.base import BaseRepo, SoftDeletableRepo
-from notora.schemas.base import (
+from notora.utils.time import now_without_tz
+from notora.utils.validation import validate_exclusive_presence
+from notora.v1.exceptions.common import AlreadyExistsError, FKNotFoundError, NotFoundError
+from notora.v1.models.base import BaseModel, GenericBaseModel
+from notora.v1.persistence.repos.base import BaseRepo, SoftDeletableRepo
+from notora.v1.schemas.base import (
     BaseResponseSchema,
     Filter,
     OrderBy,
@@ -22,8 +24,6 @@ from notora.schemas.base import (
     PaginationMetaSchema,
     SetUpdatedBySchema,
 )
-from notora.utils.time import now_without_tz
-from notora.utils.validation import validate_exclusive_presence
 
 log = logging.getLogger(__name__)
 

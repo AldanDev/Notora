@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from notora.schemas.base import BaseRequestSchema, BaseResponseSchema
+from notora.v1.schemas.base import BaseRequestSchema, BaseResponseSchema
 
 
 class MockModelResponseSchema(BaseResponseSchema):

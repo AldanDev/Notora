@@ -5,7 +5,7 @@ from sqlalchemy.sql import ColumnElement
 from sqlalchemy.sql.base import ExecutableOption
 from sqlalchemy.sql.expression import UnaryExpression
 
-from notora.persistence.models.base import GenericBaseModel
+from notora.v2.models.base import GenericBaseModel
 
 type FilterClause = ColumnElement[bool]
 type FilterFactory[ModelType: GenericBaseModel] = Callable[[type[ModelType]], FilterClause]

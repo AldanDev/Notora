@@ -2,7 +2,7 @@ from typing import Any
 
 from pydantic import BaseModel as PydanticModel
 
-from notora.persistence.models.base import GenericBaseModel
+from notora.v2.models.base import GenericBaseModel
 
 
 class PayloadMixin[ModelType: GenericBaseModel]:

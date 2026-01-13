@@ -1,5 +1,5 @@
-from notora.persistence.models.base import GenericBaseModel
-from notora.schemas.base import BaseResponseSchema
+from notora.v2.models.base import GenericBaseModel
+from notora.v2.schemas.base import BaseResponseSchema
 
 from .mixins.accessors import RepositoryProtocol, SoftDeleteRepositoryProtocol
 from .mixins.create import CreateOrSkipServiceMixin, CreateServiceMixin

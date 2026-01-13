@@ -4,7 +4,7 @@ from typing import Any, Protocol
 from sqlalchemy.orm import InstrumentedAttribute
 from sqlalchemy.sql.selectable import TypedReturnsRows
 
-from notora.persistence.models.base import GenericBaseModel
+from notora.v2.models.base import GenericBaseModel
 
 from ...repositories.types import FilterSpec, OptionSpec, OrderSpec
 

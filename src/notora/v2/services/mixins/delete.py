@@ -2,7 +2,7 @@ from collections.abc import Iterable
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from notora.persistence.models.base import GenericBaseModel
+from notora.v2.models.base import GenericBaseModel
 
 from ...repositories.types import FilterSpec
 from .accessors import RepositoryAccessorMixin, SoftDeleteRepositoryProtocol

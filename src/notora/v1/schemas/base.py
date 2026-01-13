@@ -7,8 +7,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, PlainSerializer
 
-from notora.enums.base import OrderByDirections
 from notora.types import AnyIPAddress
+from notora.v1.enums.base import OrderByDirections
 
 
 def datetime_encoder(dec_value: datetime) -> float:

@@ -4,8 +4,8 @@ from typing import Any, Literal
 from pydantic import BaseModel as PydanticModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from notora.persistence.models.base import GenericBaseModel
-from notora.schemas.base import BaseResponseSchema
+from notora.v2.models.base import GenericBaseModel
+from notora.v2.schemas.base import BaseResponseSchema
 
 from ...repositories.types import FilterSpec, OptionSpec
 from .accessors import RepositoryAccessorMixin

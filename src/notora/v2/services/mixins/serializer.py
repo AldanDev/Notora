@@ -3,8 +3,8 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import Literal, Protocol
 
-from notora.persistence.models.base import GenericBaseModel
-from notora.schemas.base import BaseResponseSchema
+from notora.v2.models.base import GenericBaseModel
+from notora.v2.schemas.base import BaseResponseSchema
 
 
 class SerializerProtocol[ModelType: GenericBaseModel](Protocol):

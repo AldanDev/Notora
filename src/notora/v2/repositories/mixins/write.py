@@ -12,7 +12,7 @@ from notora.v2.repositories.mixins.query import FilterableMixin, LoadOptionsMixi
 from notora.v2.repositories.types import FilterClause, FilterSpec, OptionSpec
 
 
-class CreatableMixin[ModelType: GenericBaseModel](LoadOptionsMixin[ModelType]):
+class CreateMixin[ModelType: GenericBaseModel](LoadOptionsMixin[ModelType]):
     def create(
         self,
         payload: dict[str, Any],
@@ -32,7 +32,7 @@ class CreatableMixin[ModelType: GenericBaseModel](LoadOptionsMixin[ModelType]):
         return self.apply_options(stmt, options)
 
 
-class UpsertableMixin[PKType, ModelType: GenericBaseModel](
+class UpsertMixin[PKType, ModelType: GenericBaseModel](
     PrimaryKeyMixin[PKType, ModelType],
     LoadOptionsMixin[ModelType],
     FilterableMixin[ModelType],
@@ -71,7 +71,7 @@ class UpsertableMixin[PKType, ModelType: GenericBaseModel](
         return self.apply_options(returning_stmt, options)
 
 
-class UpsertOrSkipMixin[ModelType: GenericBaseModel](
+class CreateOrSkipMixin[ModelType: GenericBaseModel](
     LoadOptionsMixin[ModelType],
     FilterableMixin[ModelType],
 ):

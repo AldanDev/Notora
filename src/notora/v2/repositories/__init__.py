@@ -10,7 +10,8 @@ from notora.v2.repositories.config import RepoConfig
 from notora.v2.repositories.factory import build_repository
 from notora.v2.repositories.mixins import (
     CountableMixin,
-    CreatableMixin,
+    CreateMixin,
+    CreateOrSkipMixin,
     DeleteMixin,
     FilterableMixin,
     ListableMixin,
@@ -21,8 +22,7 @@ from notora.v2.repositories.mixins import (
     SelectableMixin,
     SoftDeleteMixin,
     UpdateMixin,
-    UpsertableMixin,
-    UpsertOrSkipMixin,
+    UpsertMixin,
 )
 from notora.v2.repositories.params import PaginationParams, QueryParams
 from notora.v2.repositories.types import (
@@ -43,7 +43,8 @@ from notora.v2.repositories.types import (
 __all__ = [
     'DEFAULT_LIMIT',
     'CountableMixin',
-    'CreatableMixin',
+    'CreateMixin',
+    'CreateOrSkipMixin',
     'DefaultLimit',
     'DeleteMixin',
     'FilterClause',
@@ -72,7 +73,6 @@ __all__ = [
     'SupportsOptions',
     'SupportsWhere',
     'UpdateMixin',
-    'UpsertOrSkipMixin',
-    'UpsertableMixin',
+    'UpsertMixin',
     'build_repository',
 ]

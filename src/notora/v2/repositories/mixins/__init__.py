@@ -9,17 +9,18 @@ from notora.v2.repositories.mixins.query import (
     SelectableMixin,
 )
 from notora.v2.repositories.mixins.write import (
-    CreatableMixin,
+    CreateMixin,
+    CreateOrSkipMixin,
     DeleteMixin,
     SoftDeleteMixin,
     UpdateMixin,
-    UpsertableMixin,
-    UpsertOrSkipMixin,
+    UpsertMixin,
 )
 
 __all__ = [
     'CountableMixin',
-    'CreatableMixin',
+    'CreateMixin',
+    'CreateOrSkipMixin',
     'DeleteMixin',
     'FilterableMixin',
     'ListableMixin',
@@ -30,6 +31,5 @@ __all__ = [
     'SelectableMixin',
     'SoftDeleteMixin',
     'UpdateMixin',
-    'UpsertOrSkipMixin',
-    'UpsertableMixin',
+    'UpsertMixin',
 ]

@@ -8,13 +8,13 @@ from notora.v2.models.base import GenericBaseModel
 from notora.v2.repositories.config import RepoConfig
 from notora.v2.repositories.mixins import (
     CountableMixin,
-    CreatableMixin,
+    CreateMixin,
+    CreateOrSkipMixin,
     DeleteMixin,
     RetrievableMixin,
     SoftDeleteMixin,
     UpdateMixin,
-    UpsertableMixin,
-    UpsertOrSkipMixin,
+    UpsertMixin,
 )
 from notora.v2.repositories.params import QueryParams
 from notora.v2.repositories.types import DefaultLimit, FilterSpec, OptionSpec, OrderSpec
@@ -22,9 +22,9 @@ from notora.v2.repositories.types import DefaultLimit, FilterSpec, OptionSpec, O
 
 class Repository[PKType, ModelType: GenericBaseModel](
     RetrievableMixin[PKType, ModelType],
-    CreatableMixin[ModelType],
-    UpsertableMixin[PKType, ModelType],
-    UpsertOrSkipMixin[ModelType],
+    CreateMixin[ModelType],
+    UpsertMixin[PKType, ModelType],
+    CreateOrSkipMixin[ModelType],
     UpdateMixin[PKType, ModelType],
     DeleteMixin[PKType, ModelType],
     CountableMixin[ModelType],
@@ -53,9 +53,9 @@ class Repository[PKType, ModelType: GenericBaseModel](
 
 class SoftDeleteRepository[PKType, ModelType: GenericBaseModel](
     RetrievableMixin[PKType, ModelType],
-    CreatableMixin[ModelType],
-    UpsertableMixin[PKType, ModelType],
-    UpsertOrSkipMixin[ModelType],
+    CreateMixin[ModelType],
+    UpsertMixin[PKType, ModelType],
+    CreateOrSkipMixin[ModelType],
     SoftDeleteMixin[PKType, ModelType],
     DeleteMixin[PKType, ModelType],
     CountableMixin[ModelType],

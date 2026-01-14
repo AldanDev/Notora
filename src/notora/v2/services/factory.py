@@ -9,10 +9,7 @@ from notora.v2.services.config import ServiceConfig
 type AnyRepository[
     PKType,
     ModelType: GenericBaseModel,
-] = (
-    Repository[PKType, ModelType]
-    | SoftDeleteRepository[PKType, ModelType]
-)
+] = Repository[PKType, ModelType] | SoftDeleteRepository[PKType, ModelType]
 type AnyService[
     PKType,
     ModelType: GenericBaseModel,
@@ -24,10 +21,7 @@ type AnyService[
 type RepositoryType[
     PKType,
     ModelType: GenericBaseModel,
-] = (
-    type[Repository[PKType, ModelType]]
-    | type[SoftDeleteRepository[PKType, ModelType]]
-)
+] = type[Repository[PKType, ModelType]] | type[SoftDeleteRepository[PKType, ModelType]]
 type ServiceType[
     PKType,
     ModelType: GenericBaseModel,
@@ -36,6 +30,7 @@ type ServiceType[
     type[RepositoryService[PKType, ModelType, ResponseSchema]]
     | type[SoftDeleteRepositoryService[PKType, ModelType, ResponseSchema]]
 )
+
 
 def build_service[  # noqa: C901
     PKType,

@@ -1,7 +1,6 @@
 import typing
 from collections.abc import Sequence
 from datetime import datetime
-from math import ceil
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
@@ -52,9 +51,8 @@ class SetUpdatedBySchema(BaseRequestSchema):
 
 class PaginationMetaSchema(BaseModel):
     limit: int
+    offset: int
     total: int
-    current_page: int
-    last_page: int
 
     @classmethod
     def calculate(cls, total: int, limit: int, offset: int) -> 'PaginationMetaSchema':
@@ -64,15 +62,11 @@ class PaginationMetaSchema(BaseModel):
         if offset < 0:
             msg = 'offset must be zero or a positive integer.'
             raise ValueError(msg)
-        if total <= 0:
-            return cls(limit=limit, total=0, current_page=1, last_page=1)
-        last_page = ceil(total / limit)
-        current_page = min((offset // limit) + 1, last_page)
+        total_value = max(total, 0)
         return cls(
             limit=limit,
-            total=total,
-            current_page=current_page,
-            last_page=last_page,
+            offset=offset,
+            total=total_value,
         )
 
 

@@ -16,15 +16,20 @@ def test_pagination_meta_rejects_negative_offset(offset: int) -> None:
 
 
 def test_pagination_meta_zero_total_is_single_page() -> None:
-    meta = PaginationMetaSchema.calculate(total=0, limit=10, offset=0)
-    assert meta.total == 0
-    assert meta.current_page == 1
-    assert meta.last_page == 1
+    total = 0
+    limit = 10
+    offset = 0
+    meta = PaginationMetaSchema.calculate(total=total, limit=limit, offset=offset)
+    assert meta.total == total
+    assert meta.limit == limit
+    assert meta.offset == offset
 
 
-def test_pagination_meta_clamps_current_page() -> None:
-    current_page = 3
-    last_page = 3
-    meta = PaginationMetaSchema.calculate(total=5, limit=2, offset=10)
-    assert meta.current_page == current_page
-    assert meta.last_page == last_page
+def test_pagination_meta_retains_offset_and_total() -> None:
+    total = 5
+    limit = 2
+    offset = 10
+    meta = PaginationMetaSchema.calculate(total=total, limit=limit, offset=offset)
+    assert meta.total == total
+    assert meta.limit == limit
+    assert meta.offset == offset

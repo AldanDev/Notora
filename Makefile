@@ -6,10 +6,10 @@ args = $(filter-out $@,$(MAKECMDGOALS))
 
 # Command shortcuts
 mypy = MYPYPATH=src \
-	uv run mypy
-pyright = uv run pyright
-pytest = uv run pytest
-ruff = uv run ruff
+	uv run --group lint mypy
+pyright = uv run --group lint pyright
+pytest = uv run --group tests pytest
+ruff = uv run --group lint --group tests ruff
 
 .PHONY: format
 format:

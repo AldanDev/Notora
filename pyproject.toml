@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Shared base logic used across AldanDev projects."
 readme = "README.md"
 license = { file = "LICENSE" }
-requires-python = "<3.14,>=3.13"
+requires-python = ">=3.12,<4"
 authors = [
     { name = "Ivan Larin", email = "ivan.l@aldandev.com" },
     { name = "Igor Pavlyukovets", email = "igor.p@aldandev.com" },
@@ -17,7 +17,9 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Software Development :: Libraries",
 ]
 dependencies = [

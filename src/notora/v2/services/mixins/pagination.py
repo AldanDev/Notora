@@ -45,7 +45,7 @@ class PaginationServiceMixin[PKType, ModelType: GenericBaseModel](
         meta = PaginationMetaSchema.calculate(total=total, limit=limit, offset=offset)
         return PaginatedResponseSchema(meta=meta, data=serialized)
 
-    async def build_pagination_from_queries(
+    async def paginate_from_queries(
         self,
         session: AsyncSession,
         *,

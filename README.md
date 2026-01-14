@@ -24,6 +24,17 @@ service = RepositoryService(
 )
 ```
 
+## v2 docs
+
+- `docs/v2/index.md`
+- `docs/v2/models.md`
+- `docs/v2/repositories.md`
+- `docs/v2/services.md`
+- `docs/v2/query-dsl.md`
+- `docs/v2/pagination.md`
+- `docs/v2/m2m.md`
+- `docs/v2/recipes.md`
+
 ### Listing and pagination
 
 ```python

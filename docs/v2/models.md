@@ -1,0 +1,108 @@
+# Models and mixins (v2)
+
+v2 models are built from small mixins so you only include the fields you need.
+
+## Core base
+
+- `GenericBaseModel` adds:
+  - `id` (UUID, server default `gen_random_uuid()`)
+  - `created_at` (via `CreatableMixin`)
+  - `to_dict()` helper
+- `Base` uses a shared SQLAlchemy `MetaData` with naming conventions.
+
+## Mixins
+
+- `UpdatableMixin` -> `updated_at`
+- `UpdatedByMixin` -> `updated_by` (UUID, nullable)
+- `UpdatedByUserMixin` -> `updated_by_user` relationship to `User`
+  - Use only if a `User` model exists in your metadata.
+- `SoftDeletableMixin` -> `deleted_at`
+
+## Convenience base classes
+
+- `BaseModel` = `GenericBaseModel + UpdatableMixin + SoftDeletableMixin`
+- `UpdatableModel` = `GenericBaseModel + UpdatableMixin`
+- `UpdatedByUserModel` = `GenericBaseModel + UpdatableMixin + UpdatedByUserMixin`
+- `SoftDeletableModel` = `GenericBaseModel + SoftDeletableMixin`
+- `AuditedBaseModel` = `GenericBaseModel + UpdatableMixin + UpdatedByUserMixin + SoftDeletableMixin`
+
+## Example
+
+```python
+from sqlalchemy.orm import Mapped, mapped_column
+from notora.v2.models.base import AuditedBaseModel
+
+class User(AuditedBaseModel):
+    __tablename__ = "user"
+
+    email: Mapped[str] = mapped_column(unique=True)
+```
+
+## Notes
+
+- If you want `updated_by` but do not have a `User` model, use `UpdatedByMixin`
+  instead of `UpdatedByUserMixin`.
+- Services can auto-fill `updated_by` when you pass `actor_id` (see `services.md`).
+
+## Detailed examples
+
+### Basic model with timestamps only
+
+```python
+from sqlalchemy.orm import Mapped, mapped_column
+from notora.v2.models.base import GenericBaseModel, UpdatableMixin
+
+
+class Project(GenericBaseModel, UpdatableMixin):
+    __tablename__ = "project"
+
+    name: Mapped[str] = mapped_column(unique=True)
+```
+
+### Audit without a User model
+
+```python
+from sqlalchemy.orm import Mapped, mapped_column
+from notora.v2.models.base import GenericBaseModel, UpdatableMixin, UpdatedByMixin
+
+
+class AuditEvent(GenericBaseModel, UpdatableMixin, UpdatedByMixin):
+    __tablename__ = "audit_event"
+
+    # updated_by is just a UUID column; no relationship needed
+    event: Mapped[str]
+```
+
+### Audit with User relationship
+
+```python
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from notora.v2.models.base import UpdatedByUserModel, GenericBaseModel
+
+
+class User(GenericBaseModel):
+    __tablename__ = "user"
+
+    email: Mapped[str] = mapped_column(unique=True)
+
+
+class Task(UpdatedByUserModel):
+    __tablename__ = "task"
+
+    title: Mapped[str]
+    # updated_by_user relationship is provided by UpdatedByUserModel
+```
+
+### Full audit + soft delete in one base
+
+```python
+from sqlalchemy.orm import Mapped, mapped_column
+from notora.v2.models.base import AuditedBaseModel
+
+
+class Invoice(AuditedBaseModel):
+    __tablename__ = "invoice"
+
+    number: Mapped[str]
+    total: Mapped[int]
+```

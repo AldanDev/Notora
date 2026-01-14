@@ -83,6 +83,7 @@ class SoftDeleteRepository[PKType, ModelType: GenericBaseModel](
 
 
 class RepositoryProtocol[PKType, ModelType: GenericBaseModel](Protocol):
+    model: type[ModelType]
     pk_attribute: str
     default_limit: int
 

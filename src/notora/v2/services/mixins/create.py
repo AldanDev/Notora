@@ -13,11 +13,13 @@ from notora.v2.services.mixins.executor import SessionExecutorMixin
 from notora.v2.services.mixins.m2m import ManyToManySyncMixin
 from notora.v2.services.mixins.payload import PayloadMixin
 from notora.v2.services.mixins.serializer import SerializerProtocol
+from notora.v2.services.mixins.updated_by import UpdatedByServiceMixin
 
 
 class CreateServiceMixin[PKType, ModelType: GenericBaseModel](
     SessionExecutorMixin[PKType, ModelType],
     ManyToManySyncMixin[PKType, ModelType],
+    UpdatedByServiceMixin[PKType, ModelType],
     PayloadMixin[ModelType],
     SerializerProtocol[ModelType],
 ):
@@ -26,10 +28,12 @@ class CreateServiceMixin[PKType, ModelType: GenericBaseModel](
         session: AsyncSession,
         data: PydanticModel | dict[str, Any],
         *,
+        actor_id: Any | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
     ) -> ModelType:
         payload = self._dump_payload(data, exclude_unset=False)
         payload, relation_payload = self.split_m2m_payload(payload)
+        payload = self._apply_updated_by(payload, actor_id)
         query = self.repo.create(payload, options=options)
         entity = await self.execute_for_one(session, query)
         if relation_payload:
@@ -41,16 +45,18 @@ class CreateServiceMixin[PKType, ModelType: GenericBaseModel](
         session: AsyncSession,
         data: PydanticModel | dict[str, Any],
         *,
+        actor_id: Any | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
         schema: type[BaseResponseSchema] | Literal[False] | None = None,
     ) -> BaseResponseSchema | ModelType:
-        entity = await self.create_raw(session, data, options=options)
+        entity = await self.create_raw(session, data, actor_id=actor_id, options=options)
         return self.serialize_one(entity, schema=schema)
 
 
 class CreateOrSkipServiceMixin[PKType, ModelType: GenericBaseModel](
     SessionExecutorMixin[PKType, ModelType],
     RepositoryAccessorMixin[PKType, ModelType],
+    UpdatedByServiceMixin[PKType, ModelType],
     PayloadMixin[ModelType],
     SerializerProtocol[ModelType],
 ):
@@ -61,9 +67,11 @@ class CreateOrSkipServiceMixin[PKType, ModelType: GenericBaseModel](
         *,
         conflict_columns: Sequence[InstrumentedAttribute[Any]],
         conflict_where: Iterable[FilterSpec[ModelType]] | None = None,
+        actor_id: Any | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
     ) -> ModelType | None:
         payload = self._dump_payload(data, exclude_unset=False)
+        payload = self._apply_updated_by(payload, actor_id)
         query = self.repo.create_or_skip(
             payload,
             conflict_columns=conflict_columns,
@@ -79,6 +87,7 @@ class CreateOrSkipServiceMixin[PKType, ModelType: GenericBaseModel](
         *,
         conflict_columns: Sequence[InstrumentedAttribute[Any]],
         conflict_where: Iterable[FilterSpec[ModelType]] | None = None,
+        actor_id: Any | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
         schema: type[BaseResponseSchema] | Literal[False] | None = None,
     ) -> BaseResponseSchema | ModelType | None:
@@ -87,6 +96,7 @@ class CreateOrSkipServiceMixin[PKType, ModelType: GenericBaseModel](
             data,
             conflict_columns=conflict_columns,
             conflict_where=conflict_where,
+            actor_id=actor_id,
             options=options,
         )
         if entity is None:

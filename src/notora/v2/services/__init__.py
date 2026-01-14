@@ -20,6 +20,7 @@ from notora.v2.services.mixins import (
     SessionExecutorMixin,
     SoftDeleteServiceMixin,
     UpdateByFilterServiceMixin,
+    UpdatedByServiceMixin,
     UpdateServiceMixin,
     UpsertServiceMixin,
 )
@@ -45,6 +46,7 @@ __all__ = [
     'SoftDeleteServiceMixin',
     'UpdateByFilterServiceMixin',
     'UpdateServiceMixin',
+    'UpdatedByServiceMixin',
     'UpsertServiceMixin',
     'build_service',
     'build_service_for_repo',

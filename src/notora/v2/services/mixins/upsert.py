@@ -12,11 +12,13 @@ from notora.v2.services.mixins.executor import SessionExecutorMixin
 from notora.v2.services.mixins.m2m import ManyToManySyncMixin
 from notora.v2.services.mixins.payload import PayloadMixin
 from notora.v2.services.mixins.serializer import SerializerProtocol
+from notora.v2.services.mixins.updated_by import UpdatedByServiceMixin
 
 
 class UpsertServiceMixin[PKType, ModelType: GenericBaseModel](
     SessionExecutorMixin[PKType, ModelType],
     ManyToManySyncMixin[PKType, ModelType],
+    UpdatedByServiceMixin[PKType, ModelType],
     PayloadMixin[ModelType],
     SerializerProtocol[ModelType],
 ):
@@ -29,10 +31,12 @@ class UpsertServiceMixin[PKType, ModelType: GenericBaseModel](
         conflict_where: Iterable[FilterSpec[ModelType]] | None = None,
         update_only: Sequence[str] | None = None,
         update_exclude: Sequence[str] | None = None,
+        actor_id: Any | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
     ) -> ModelType:
         payload = self._dump_payload(data, exclude_unset=False)
         payload, relation_payload = self.split_m2m_payload(payload)
+        payload = self._apply_updated_by(payload, actor_id)
         query = self.repo.upsert(
             payload,
             conflict_columns=conflict_columns,
@@ -55,6 +59,7 @@ class UpsertServiceMixin[PKType, ModelType: GenericBaseModel](
         conflict_where: Iterable[FilterSpec[ModelType]] | None = None,
         update_only: Sequence[str] | None = None,
         update_exclude: Sequence[str] | None = None,
+        actor_id: Any | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
         schema: type[BaseResponseSchema] | Literal[False] | None = None,
     ) -> BaseResponseSchema | ModelType:
@@ -65,6 +70,7 @@ class UpsertServiceMixin[PKType, ModelType: GenericBaseModel](
             conflict_where=conflict_where,
             update_only=update_only,
             update_exclude=update_exclude,
+            actor_id=actor_id,
             options=options,
         )
         return self.serialize_one(entity, schema=schema)

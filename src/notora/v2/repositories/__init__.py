@@ -25,6 +25,15 @@ from notora.v2.repositories.mixins import (
     UpsertMixin,
 )
 from notora.v2.repositories.params import PaginationParams, QueryParams
+from notora.v2.repositories.query_dsl import (
+    FilterField,
+    FilterOperator,
+    QueryInput,
+    SortDirection,
+    SortField,
+    build_query_params,
+    make_query_params_dependency,
+)
 from notora.v2.repositories.types import (
     DEFAULT_LIMIT,
     DefaultLimit,
@@ -49,6 +58,8 @@ __all__ = [
     'DeleteMixin',
     'FilterClause',
     'FilterFactory',
+    'FilterField',
+    'FilterOperator',
     'FilterSpec',
     'FilterableMixin',
     'ListableMixin',
@@ -61,6 +72,7 @@ __all__ = [
     'OrderableMixin',
     'PaginationParams',
     'PrimaryKeyMixin',
+    'QueryInput',
     'QueryParams',
     'RepoConfig',
     'Repository',
@@ -70,9 +82,13 @@ __all__ = [
     'SoftDeleteMixin',
     'SoftDeleteRepository',
     'SoftDeleteRepositoryProtocol',
+    'SortDirection',
+    'SortField',
     'SupportsOptions',
     'SupportsWhere',
     'UpdateMixin',
     'UpsertMixin',
+    'build_query_params',
     'build_repository',
+    'make_query_params_dependency',
 ]

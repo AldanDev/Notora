@@ -53,6 +53,48 @@ repo = build_repository(User, config=RepoConfig(default_limit=25))
 service = build_service(User, repo=repo, service_config=ServiceConfig(detail_schema=UserSchema))
 ```
 
+### Query DSL (FastAPI-friendly)
+
+```python
+from fastapi import Depends
+from notora.v2.repositories import (
+    FilterField,
+    QueryParams,
+    QueryInput,
+    SortField,
+    build_query_params,
+    make_query_params_dependency,
+)
+
+filter_fields = {
+    'name': FilterField(resolver=lambda m: m.name, value_type=str),
+    'age': FilterField(resolver=lambda m: m.age, value_type=int, operators={'eq', 'gte', 'lte'}),
+}
+sort_fields = {
+    'name': SortField(resolver=lambda m: m.name),
+    'created_at': SortField(resolver=lambda m: m.created_at),
+}
+
+def query_params(query: QueryInput = Depends()) -> QueryParams[User]:
+    return build_query_params(
+        query,
+        model=User,
+        filter_fields=filter_fields,
+        sort_fields=sort_fields,
+    )
+
+query_params_dep = make_query_params_dependency(
+    model=User,
+    filter_fields=filter_fields,
+    sort_fields=sort_fields,
+)
+
+# Example request:
+# /users?filter=name:eq:john&filter=age:gte:18&sort=-created_at&limit=20&offset=0
+```
+
+Supported operators: `eq`, `ne`, `lt`, `lte`, `gt`, `gte`, `in`, `ilike`, `isnull`.
+
 ### M2M sync modes
 
 ```python

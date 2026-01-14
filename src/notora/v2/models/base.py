@@ -12,7 +12,6 @@ from sqlalchemy.orm import (
     mapped_column,
     relationship,
 )
-from sqlalchemy.sql.functions import GenericFunction
 
 POSTGRES_NAMING_CONVENTION = {
     'ix': '%(column_0_label)s_idx',
@@ -26,12 +25,6 @@ metadata = MetaData(naming_convention=POSTGRES_NAMING_CONVENTION)
 
 class Base(DeclarativeBase):
     metadata = metadata
-
-
-class GenerateUUID(GenericFunction[uuid.UUID]):
-    type = UUID()
-    name = 'gen_random_uuid'
-    identifier = 'gen_random_uuid'
 
 
 class CreatableMixin:
@@ -72,7 +65,7 @@ class GenericBaseModel(Base, CreatableMixin):
     id: Mapped[uuid.UUID] = mapped_column(
         UUID,
         primary_key=True,
-        server_default=GenerateUUID(),
+        server_default=func.gen_random_uuid(),
     )
 
     def __repr__(self) -> str:

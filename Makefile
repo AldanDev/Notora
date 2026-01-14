@@ -24,11 +24,8 @@ sync:
 test:
 	$(pytest)
 
-.PHONY: lint-python
-lint-python: python-lint
-
-.PHONY: python-lint
-python-lint:
+.PHONY: lint
+lint:
 	$(ruff) check . --preview
 	$(mypy) src tests
 	$(pyright)

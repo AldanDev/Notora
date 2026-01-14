@@ -58,8 +58,16 @@ class PaginationMetaSchema(BaseModel):
 
     @classmethod
     def calculate(cls, total: int, limit: int, offset: int) -> 'PaginationMetaSchema':
-        current_page = (offset // limit) + 1 if total >= limit else 1
-        last_page = ceil(total / limit) if total > 0 else 1
+        if limit <= 0:
+            msg = 'limit must be a positive integer.'
+            raise ValueError(msg)
+        if offset < 0:
+            msg = 'offset must be zero or a positive integer.'
+            raise ValueError(msg)
+        if total <= 0:
+            return cls(limit=limit, total=0, current_page=1, last_page=1)
+        last_page = ceil(total / limit)
+        current_page = min((offset // limit) + 1, last_page)
         return cls(
             limit=limit,
             total=total,

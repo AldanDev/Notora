@@ -1,18 +1,18 @@
 from collections.abc import Iterable
-from typing import Literal
+from typing import Any, Literal
 
 from sqlalchemy import Executable
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from notora.v2.models.base import GenericBaseModel
+from notora.v2.repositories.params import PaginationParams
+from notora.v2.repositories.types import FilterSpec, OptionSpec, OrderSpec
 from notora.v2.schemas.base import (
     BaseResponseSchema,
     PaginatedResponseSchema,
     PaginationMetaSchema,
 )
-
-from ...repositories.types import FilterSpec, OptionSpec, OrderSpec
-from .listing import ListingServiceMixin
+from notora.v2.services.mixins.listing import ListingServiceMixin
 
 
 class PaginationServiceMixin[PKType, ModelType: GenericBaseModel](
@@ -27,6 +27,7 @@ class PaginationServiceMixin[PKType, ModelType: GenericBaseModel](
         offset: int = 0,
         ordering: Iterable[OrderSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
+        base_query: Any | None = None,
         schema: type[BaseResponseSchema] | Literal[False] | None = None,
     ) -> PaginatedResponseSchema[BaseResponseSchema | ModelType]:
         data = await self.list_raw(
@@ -36,6 +37,7 @@ class PaginationServiceMixin[PKType, ModelType: GenericBaseModel](
             offset=offset,
             ordering=ordering,
             options=options,
+            base_query=base_query,
         )
         serialized = self.serialize_many(data, schema=schema)
         total_query = self.repo.count(filters=filters)
@@ -53,8 +55,26 @@ class PaginationServiceMixin[PKType, ModelType: GenericBaseModel](
         offset: int,
         schema: type[BaseResponseSchema] | Literal[False] | None = None,
     ) -> PaginatedResponseSchema[BaseResponseSchema | ModelType]:
-        data = await session.scalars(data_query)
+        data = (await session.scalars(data_query)).all()
         serialized = self.serialize_many(data, schema=schema)
         total = (await session.execute(count_query)).scalar_one()
         meta = PaginationMetaSchema.calculate(total=total, limit=limit, offset=offset)
         return PaginatedResponseSchema(meta=meta, data=serialized)
+
+    async def paginate_params(
+        self,
+        session: AsyncSession,
+        params: PaginationParams[ModelType],
+        *,
+        schema: type[BaseResponseSchema] | Literal[False] | None = None,
+    ) -> PaginatedResponseSchema[BaseResponseSchema | ModelType]:
+        return await self.paginate(
+            session,
+            filters=params.filters,
+            limit=params.limit,
+            offset=params.offset,
+            ordering=params.ordering,
+            options=params.options,
+            base_query=params.base_query,
+            schema=schema,
+        )

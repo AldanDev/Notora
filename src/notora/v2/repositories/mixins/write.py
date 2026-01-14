@@ -1,5 +1,5 @@
 from collections.abc import Iterable, Sequence
-from typing import Any
+from typing import Any, cast
 
 from sqlalchemy import and_, delete, func, insert, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -7,11 +7,9 @@ from sqlalchemy.orm import InstrumentedAttribute
 from sqlalchemy.sql.dml import ReturningInsert
 from sqlalchemy.sql.selectable import TypedReturnsRows
 
-from notora.utils.validation import validate_exclusive_presence
 from notora.v2.models.base import GenericBaseModel
-
-from ..types import FilterSpec, OptionSpec
-from .query import FilterableMixin, LoadOptionsMixin, PrimaryKeyMixin
+from notora.v2.repositories.mixins.query import FilterableMixin, LoadOptionsMixin, PrimaryKeyMixin
+from notora.v2.repositories.types import FilterClause, FilterSpec, OptionSpec
 
 
 class CreatableMixin[ModelType: GenericBaseModel](LoadOptionsMixin[ModelType]):
@@ -49,24 +47,28 @@ class UpsertableMixin[PKType, ModelType: GenericBaseModel](
         update_exclude: Sequence[str] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
     ) -> ReturningInsert[tuple[ModelType]]:
-        validate_exclusive_presence(update_only, update_exclude)
+        if update_only is not None and update_exclude is not None:
+            msg = 'Only one of update_only or update_exclude can be provided.'
+            raise ValueError(msg)
         stmt = pg_insert(self.model).values(**payload)
 
-        update_payload = payload
         if update_only is not None:
             update_payload = {k: v for k, v in payload.items() if k in update_only}
         elif update_exclude is not None:
             update_payload = {k: v for k, v in payload.items() if k not in update_exclude}
+        else:
+            update_payload = payload
 
         clauses = self.merge_filters(conflict_where)
         where_clause = and_(*clauses) if clauses else None
 
-        stmt = stmt.on_conflict_do_update(
-            index_elements=conflict_columns or (self.pk_column,),
+        index_elements = conflict_columns or (cast(InstrumentedAttribute[Any], self.pk_column),)
+        returning_stmt = stmt.on_conflict_do_update(
+            index_elements=cast(Iterable[Any], index_elements),
             index_where=where_clause,
             set_=update_payload,
         ).returning(self.model)
-        return self.apply_options(stmt, options)
+        return self.apply_options(returning_stmt, options)
 
 
 class UpsertOrSkipMixin[ModelType: GenericBaseModel](
@@ -84,11 +86,11 @@ class UpsertOrSkipMixin[ModelType: GenericBaseModel](
         stmt = pg_insert(self.model).values(**payload)
         clauses = self.merge_filters(conflict_where)
         where_clause = and_(*clauses) if clauses else None
-        stmt = stmt.on_conflict_do_nothing(
-            index_elements=conflict_columns,
+        returning_stmt = stmt.on_conflict_do_nothing(
+            index_elements=cast(Iterable[Any], conflict_columns),
             index_where=where_clause,
         ).returning(self.model)
-        return self.apply_options(stmt, options)
+        return self.apply_options(returning_stmt, options)
 
 
 class UpdateMixin[PKType, ModelType: GenericBaseModel](
@@ -115,7 +117,7 @@ class UpdateMixin[PKType, ModelType: GenericBaseModel](
         *,
         options: Iterable[OptionSpec[ModelType]] | None = None,
     ) -> TypedReturnsRows[tuple[ModelType]]:
-        filters = (lambda _: self.pk_column == pk,)
+        filters = (cast(FilterClause, self.pk_column == pk),)
         return self.update_by(payload, filters=filters, options=options)
 
 
@@ -132,8 +134,8 @@ class DeleteMixin[PKType, ModelType: GenericBaseModel](
     ) -> TypedReturnsRows[tuple[ModelType]]:
         stmt = delete(self.model)
         stmt = self.apply_filters(stmt, filters)
-        stmt = stmt.returning(self.model)
-        return self.apply_options(stmt, options)
+        returning_stmt = stmt.returning(self.model)
+        return self.apply_options(returning_stmt, options)
 
     def delete(
         self,
@@ -141,7 +143,7 @@ class DeleteMixin[PKType, ModelType: GenericBaseModel](
         *,
         options: Iterable[OptionSpec[ModelType]] | None = None,
     ) -> TypedReturnsRows[tuple[ModelType]]:
-        filters = (lambda _: self.pk_column == pk,)
+        filters = (cast(FilterClause, self.pk_column == pk),)
         return self.delete_by(filters=filters, options=options)
 
 
@@ -163,5 +165,5 @@ class SoftDeleteMixin[PKType, ModelType: GenericBaseModel](UpdateMixin[PKType, M
         *,
         options: Iterable[OptionSpec[ModelType]] | None = None,
     ) -> TypedReturnsRows[tuple[ModelType]]:
-        filters = (lambda _: self.pk_column == pk,)
+        filters = (cast(FilterClause, self.pk_column == pk),)
         return self.soft_delete_by(filters=filters, options=options)

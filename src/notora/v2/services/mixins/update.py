@@ -5,14 +5,13 @@ from pydantic import BaseModel as PydanticModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from notora.v2.models.base import GenericBaseModel
+from notora.v2.repositories.types import FilterSpec, OptionSpec
 from notora.v2.schemas.base import BaseResponseSchema
-
-from ...repositories.types import FilterSpec, OptionSpec
-from .accessors import RepositoryAccessorMixin
-from .executor import SessionExecutorMixin
-from .m2m import ManyToManySyncMixin
-from .payload import PayloadMixin
-from .serializer import SerializerProtocol
+from notora.v2.services.mixins.accessors import RepositoryAccessorMixin
+from notora.v2.services.mixins.executor import SessionExecutorMixin
+from notora.v2.services.mixins.m2m import ManyToManySyncMixin
+from notora.v2.services.mixins.payload import PayloadMixin
+from notora.v2.services.mixins.serializer import SerializerProtocol
 
 
 class UpdateServiceMixin[PKType, ModelType: GenericBaseModel](

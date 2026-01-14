@@ -1,14 +1,14 @@
 from notora.v2.models.base import GenericBaseModel
+from notora.v2.repositories.base import RepositoryProtocol, SoftDeleteRepositoryProtocol
 from notora.v2.schemas.base import BaseResponseSchema
-
-from .mixins.accessors import RepositoryProtocol, SoftDeleteRepositoryProtocol
-from .mixins.create import CreateOrSkipServiceMixin, CreateServiceMixin
-from .mixins.delete import DeleteServiceMixin, SoftDeleteServiceMixin
-from .mixins.pagination import PaginationServiceMixin
-from .mixins.retrieval import RetrievalServiceMixin
-from .mixins.serializer import SerializerMixin
-from .mixins.update import UpdateByFilterServiceMixin, UpdateServiceMixin
-from .mixins.upsert import UpsertServiceMixin
+from notora.v2.services.config import ServiceConfig
+from notora.v2.services.mixins.create import CreateOrSkipServiceMixin, CreateServiceMixin
+from notora.v2.services.mixins.delete import DeleteServiceMixin, SoftDeleteServiceMixin
+from notora.v2.services.mixins.pagination import PaginationServiceMixin
+from notora.v2.services.mixins.retrieval import RetrievalServiceMixin
+from notora.v2.services.mixins.serializer import SerializerMixin
+from notora.v2.services.mixins.update import UpdateByFilterServiceMixin, UpdateServiceMixin
+from notora.v2.services.mixins.upsert import UpsertServiceMixin
 
 
 class RepositoryService[PKType, ModelType: GenericBaseModel, ResponseSchema: BaseResponseSchema](
@@ -24,8 +24,19 @@ class RepositoryService[PKType, ModelType: GenericBaseModel, ResponseSchema: Bas
 ):
     """Turnkey async service that glues repository access and serialization together."""
 
-    def __init__(self, repo: RepositoryProtocol[PKType, ModelType]) -> None:
+    def __init__(
+        self,
+        repo: RepositoryProtocol[PKType, ModelType],
+        *,
+        config: ServiceConfig[ResponseSchema] | None = None,
+    ) -> None:
         self.repo = repo
+        if config is None:
+            return
+        if config.detail_schema is not None:
+            self.detail_schema = config.detail_schema
+        if config.list_schema is not None:
+            self.list_schema = config.list_schema
 
 
 class SoftDeleteRepositoryService[
@@ -38,5 +49,10 @@ class SoftDeleteRepositoryService[
 ):
     """Repository service variant that exposes soft-delete helpers."""
 
-    def __init__(self, repo: SoftDeleteRepositoryProtocol[PKType, ModelType]) -> None:
-        super().__init__(repo)
+    def __init__(
+        self,
+        repo: SoftDeleteRepositoryProtocol[PKType, ModelType],
+        *,
+        config: ServiceConfig[ResponseSchema] | None = None,
+    ) -> None:
+        super().__init__(repo, config=config)

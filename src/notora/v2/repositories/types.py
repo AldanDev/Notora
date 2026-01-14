@@ -7,6 +7,15 @@ from sqlalchemy.sql.expression import UnaryExpression
 
 from notora.v2.models.base import GenericBaseModel
 
+
+class _DefaultLimit:
+    def __repr__(self) -> str:
+        return 'DEFAULT_LIMIT'
+
+
+DEFAULT_LIMIT = _DefaultLimit()
+type DefaultLimit = _DefaultLimit
+
 type FilterClause = ColumnElement[bool]
 type FilterFactory[ModelType: GenericBaseModel] = Callable[[type[ModelType]], FilterClause]
 type FilterSpec[ModelType: GenericBaseModel] = FilterClause | FilterFactory[ModelType]

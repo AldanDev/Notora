@@ -1,7 +1,14 @@
 """Repository mixins and base classes for v2."""
 
-from .base import Repository, SoftDeleteRepository
-from .mixins import (
+from notora.v2.repositories.base import (
+    Repository,
+    RepositoryProtocol,
+    SoftDeleteRepository,
+    SoftDeleteRepositoryProtocol,
+)
+from notora.v2.repositories.config import RepoConfig
+from notora.v2.repositories.factory import build_repository
+from notora.v2.repositories.mixins import (
     CountableMixin,
     CreatableMixin,
     DeleteMixin,
@@ -17,7 +24,10 @@ from .mixins import (
     UpsertableMixin,
     UpsertOrSkipMixin,
 )
-from .types import (
+from notora.v2.repositories.params import PaginationParams, QueryParams
+from notora.v2.repositories.types import (
+    DEFAULT_LIMIT,
+    DefaultLimit,
     FilterClause,
     FilterFactory,
     FilterSpec,
@@ -31,8 +41,10 @@ from .types import (
 )
 
 __all__ = [
+    'DEFAULT_LIMIT',
     'CountableMixin',
     'CreatableMixin',
+    'DefaultLimit',
     'DeleteMixin',
     'FilterClause',
     'FilterFactory',
@@ -46,15 +58,21 @@ __all__ = [
     'OrderFactory',
     'OrderSpec',
     'OrderableMixin',
+    'PaginationParams',
     'PrimaryKeyMixin',
+    'QueryParams',
+    'RepoConfig',
     'Repository',
+    'RepositoryProtocol',
     'RetrievableMixin',
     'SelectableMixin',
     'SoftDeleteMixin',
     'SoftDeleteRepository',
+    'SoftDeleteRepositoryProtocol',
     'SupportsOptions',
     'SupportsWhere',
     'UpdateMixin',
     'UpsertOrSkipMixin',
     'UpsertableMixin',
+    'build_repository',
 ]

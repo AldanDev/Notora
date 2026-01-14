@@ -1,6 +1,7 @@
-from notora.v2.models.base import GenericBaseModel
+from typing import cast
 
-from ...repositories.base import RepositoryProtocol
+from notora.v2.models.base import GenericBaseModel
+from notora.v2.repositories.base import RepositoryProtocol
 
 
 class RepositoryAccessorMixin[PKType, ModelType: GenericBaseModel]:
@@ -8,4 +9,4 @@ class RepositoryAccessorMixin[PKType, ModelType: GenericBaseModel]:
 
     def _extract_pk(self, entity: ModelType) -> PKType:
         pk_attr = getattr(self.repo, 'pk_attribute', 'id')
-        return getattr(entity, pk_attr)
+        return cast(PKType, getattr(entity, pk_attr))

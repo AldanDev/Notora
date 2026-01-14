@@ -5,8 +5,8 @@ from sqlalchemy.orm import InstrumentedAttribute
 from sqlalchemy.sql.selectable import TypedReturnsRows
 
 from notora.v2.models.base import GenericBaseModel
-
-from .mixins import (
+from notora.v2.repositories.config import RepoConfig
+from notora.v2.repositories.mixins import (
     CountableMixin,
     CreatableMixin,
     DeleteMixin,
@@ -16,7 +16,8 @@ from .mixins import (
     UpsertableMixin,
     UpsertOrSkipMixin,
 )
-from .types import FilterSpec, OptionSpec, OrderSpec
+from notora.v2.repositories.params import QueryParams
+from notora.v2.repositories.types import DefaultLimit, FilterSpec, OptionSpec, OrderSpec
 
 
 class Repository[PKType, ModelType: GenericBaseModel](
@@ -30,9 +31,24 @@ class Repository[PKType, ModelType: GenericBaseModel](
 ):
     """Composition-friendly base repository built out of mixins."""
 
-    def __init__(self, model: type[ModelType], *, default_limit: int = 50) -> None:
+    def __init__(  # noqa: C901
+        self, model: type[ModelType], *, config: RepoConfig[ModelType] | None = None
+    ) -> None:
         self.model = model
-        self.default_limit = default_limit
+        if config is None:
+            return
+        if config.default_limit is not None:
+            self.default_limit = config.default_limit
+        if config.default_options is not None:
+            self.default_options = config.default_options
+        if config.default_filters is not None:
+            self.default_filters = config.default_filters
+        if config.default_ordering is not None:
+            self.default_ordering = config.default_ordering
+        if config.fallback_sort_attribute is not None:
+            self.fallback_sort_attribute = config.fallback_sort_attribute
+        if config.pk_attribute is not None:
+            self.pk_attribute = config.pk_attribute
 
 
 class SoftDeleteRepository[PKType, ModelType: GenericBaseModel](
@@ -46,21 +62,43 @@ class SoftDeleteRepository[PKType, ModelType: GenericBaseModel](
 ):
     """Repository variant with soft-delete helpers."""
 
-    def __init__(self, model: type[ModelType], *, default_limit: int = 50) -> None:
+    def __init__(  # noqa: C901
+        self, model: type[ModelType], *, config: RepoConfig[ModelType] | None = None
+    ) -> None:
         self.model = model
-        self.default_limit = default_limit
+        if config is None:
+            return
+        if config.default_limit is not None:
+            self.default_limit = config.default_limit
+        if config.default_options is not None:
+            self.default_options = config.default_options
+        if config.default_filters is not None:
+            self.default_filters = config.default_filters
+        if config.default_ordering is not None:
+            self.default_ordering = config.default_ordering
+        if config.fallback_sort_attribute is not None:
+            self.fallback_sort_attribute = config.fallback_sort_attribute
+        if config.pk_attribute is not None:
+            self.pk_attribute = config.pk_attribute
 
 
 class RepositoryProtocol[PKType, ModelType: GenericBaseModel](Protocol):
+    pk_attribute: str
+    default_limit: int
+
     def list(
         self,
         *,
         filters: Iterable[FilterSpec[ModelType]] | None = None,
-        limit: int | None = None,
+        limit: int | DefaultLimit | None = ...,
         offset: int = 0,
         ordering: Iterable[OrderSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
         base_query: Any | None = None,
+    ) -> TypedReturnsRows[tuple[ModelType]]: ...
+
+    def list_by_params(
+        self, params: QueryParams[ModelType]
     ) -> TypedReturnsRows[tuple[ModelType]]: ...
 
     def count(
@@ -73,6 +111,14 @@ class RepositoryProtocol[PKType, ModelType: GenericBaseModel](Protocol):
         self,
         pk: PKType,
         *,
+        options: Iterable[OptionSpec[ModelType]] | None = None,
+    ) -> TypedReturnsRows[tuple[ModelType]]: ...
+
+    def retrieve_by(
+        self,
+        *,
+        filters: Iterable[FilterSpec[ModelType]] | None = None,
+        ordering: Iterable[OrderSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
     ) -> TypedReturnsRows[tuple[ModelType]]: ...
 

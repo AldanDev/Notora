@@ -1,4 +1,4 @@
-from .query import (
+from notora.v2.repositories.mixins.query import (
     CountableMixin,
     FilterableMixin,
     ListableMixin,
@@ -8,7 +8,7 @@ from .query import (
     RetrievableMixin,
     SelectableMixin,
 )
-from .write import (
+from notora.v2.repositories.mixins.write import (
     CreatableMixin,
     DeleteMixin,
     SoftDeleteMixin,

@@ -2,6 +2,7 @@ import re
 from typing import ClassVar
 
 from sqlalchemy import exc
+from sqlalchemy.engine import Result
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.selectable import TypedReturnsRows
 
@@ -29,7 +30,7 @@ class SessionExecutorMixin[PKType, ModelType: GenericBaseModel]:
         self,
         session: AsyncSession,
         statement: TypedReturnsRows[tuple[ModelType]],
-    ):
+    ) -> Result[tuple[ModelType]]:
         try:
             return await session.execute(statement)
         except exc.IntegrityError as err:

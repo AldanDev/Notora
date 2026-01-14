@@ -3,11 +3,10 @@ from collections.abc import Iterable
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from notora.v2.models.base import GenericBaseModel
-
-from ...repositories.base import SoftDeleteRepositoryProtocol
-from ...repositories.types import FilterSpec
-from .accessors import RepositoryAccessorMixin
-from .executor import SessionExecutorMixin
+from notora.v2.repositories.base import SoftDeleteRepositoryProtocol
+from notora.v2.repositories.types import FilterSpec
+from notora.v2.services.mixins.accessors import RepositoryAccessorMixin
+from notora.v2.services.mixins.executor import SessionExecutorMixin
 
 
 class DeleteServiceMixin[PKType, ModelType: GenericBaseModel](

@@ -1,16 +1,19 @@
 from collections.abc import Iterable, Sequence
-from typing import Any
+from typing import Any, cast
 
 from sqlalchemy import Select, func, select
 from sqlalchemy.orm import InstrumentedAttribute
 from sqlalchemy.sql.base import ExecutableOption
 
 from notora.v2.models.base import GenericBaseModel
-
-from ..types import (
+from notora.v2.repositories.params import QueryParams
+from notora.v2.repositories.types import (
+    DEFAULT_LIMIT,
+    DefaultLimit,
     FilterClause,
     FilterSpec,
     OptionSpec,
+    OrderClause,
     OrderSpec,
     SupportsOptions,
     SupportsWhere,
@@ -75,7 +78,7 @@ class OrderableMixin[ModelType: GenericBaseModel]:
     default_ordering: Sequence[OrderSpec[ModelType]] = ()
     fallback_sort_attribute: str = 'id'
 
-    def _resolve_order(self, spec: OrderSpec[ModelType]):
+    def _resolve_order(self, spec: OrderSpec[ModelType]) -> OrderClause:
         return spec(self.model) if callable(spec) else spec
 
     def merge_ordering(
@@ -122,17 +125,39 @@ class ListableMixin[ModelType: GenericBaseModel](
         self,
         *,
         filters: Iterable[FilterSpec[ModelType]] | None = None,
-        limit: int | None = None,
+        limit: int | DefaultLimit | None = DEFAULT_LIMIT,
         offset: int = 0,
         ordering: Iterable[OrderSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
         base_query: Select[tuple[ModelType]] | None = None,
     ) -> Select[tuple[ModelType]]:
-        stmt = base_query or self.select(options=options)
+        if base_query is None:
+            stmt = self.select(options=options)
+        else:
+            stmt = self.apply_options(base_query, options)
         stmt = self.apply_filters(stmt, filters)
         stmt = self.apply_ordering(stmt, ordering)
-        limit_value = self.default_limit if limit is None else limit
-        return stmt.limit(limit_value).offset(offset)
+        if limit is DEFAULT_LIMIT:
+            limit_value = self.default_limit
+        elif limit is None:
+            limit_value = None
+        else:
+            limit_value = cast(int | None, limit)
+        if limit_value is not None:
+            stmt = stmt.limit(limit_value)
+        if offset:
+            stmt = stmt.offset(offset)
+        return stmt
+
+    def list_by_params(self, params: QueryParams[ModelType]) -> Select[tuple[ModelType]]:
+        return self.list(
+            filters=params.filters,
+            limit=params.limit,
+            offset=params.offset,
+            ordering=params.ordering,
+            options=params.options,
+            base_query=params.base_query,
+        )
 
 
 class PrimaryKeyMixin[PKType, ModelType: GenericBaseModel]:
@@ -141,7 +166,7 @@ class PrimaryKeyMixin[PKType, ModelType: GenericBaseModel]:
 
     @property
     def pk_column(self) -> InstrumentedAttribute[PKType]:
-        return getattr(self.model, self.pk_attribute)
+        return cast(InstrumentedAttribute[PKType], getattr(self.model, self.pk_attribute))
 
 
 class RetrievableMixin[PKType, ModelType: GenericBaseModel](
@@ -155,12 +180,12 @@ class RetrievableMixin[PKType, ModelType: GenericBaseModel](
         options: Iterable[OptionSpec[ModelType]] | None = None,
     ) -> Select[tuple[ModelType]]:
         return self.list(
-            filters=(lambda _: self.pk_column == pk,),
+            filters=(cast(FilterClause, self.pk_column == pk),),
             limit=1,
             options=options,
         )
 
-    def retrieve_one_by(
+    def retrieve_by(
         self,
         *,
         filters: Iterable[FilterSpec[ModelType]] | None = None,
@@ -171,6 +196,16 @@ class RetrievableMixin[PKType, ModelType: GenericBaseModel](
         stmt = self.apply_filters(stmt, filters)
         stmt = self.apply_ordering(stmt, ordering)
         return stmt
+
+    def retrieve_one_by(
+        self,
+        *,
+        filters: Iterable[FilterSpec[ModelType]] | None = None,
+        ordering: Iterable[OrderSpec[ModelType]] | None = None,
+        options: Iterable[OptionSpec[ModelType]] | None = None,
+    ) -> Select[tuple[ModelType]]:
+        stmt = self.retrieve_by(filters=filters, ordering=ordering, options=options)
+        return stmt.limit(1)
 
 
 class CountableMixin[ModelType: GenericBaseModel](FilterableMixin[ModelType]):

@@ -1,15 +1,14 @@
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable
 from typing import Literal
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from notora.v2.models.base import GenericBaseModel
+from notora.v2.repositories.types import FilterSpec, OptionSpec, OrderSpec
 from notora.v2.schemas.base import BaseResponseSchema
-
-from ...repositories.types import FilterSpec, OptionSpec, OrderSpec
-from .accessors import RepositoryAccessorMixin
-from .executor import SessionExecutorMixin
-from .serializer import SerializerProtocol
+from notora.v2.services.mixins.accessors import RepositoryAccessorMixin
+from notora.v2.services.mixins.executor import SessionExecutorMixin
+from notora.v2.services.mixins.serializer import SerializerProtocol
 
 
 class RetrievalServiceMixin[PKType, ModelType: GenericBaseModel](
@@ -27,7 +26,7 @@ class RetrievalServiceMixin[PKType, ModelType: GenericBaseModel](
         query = self.repo.retrieve(pk, options=options)
         return await self.execute_for_one(session, query)
 
-    async def retrieve_one_raw_by(
+    async def retrieve_one_by_raw(
         self,
         session: AsyncSession,
         *,
@@ -49,14 +48,19 @@ class RetrievalServiceMixin[PKType, ModelType: GenericBaseModel](
         entity = await self.retrieve_raw(session, pk, options=options)
         return self.serialize_one(entity, schema=schema)
 
-    async def retrieve_all_raw_by(
+    async def retrieve_one_by(
         self,
         session: AsyncSession,
         *,
         filters: Iterable[FilterSpec[ModelType]] | None = None,
         ordering: Iterable[OrderSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
-    ) -> Sequence[ModelType]:
-        query = self.repo.retrieve_one_by(filters=filters, ordering=ordering, options=options)
-        result = await session.scalars(query)
-        return result.all()
+        schema: type[BaseResponseSchema] | Literal[False] | None = None,
+    ) -> BaseResponseSchema | ModelType:
+        entity = await self.retrieve_one_by_raw(
+            session,
+            filters=filters,
+            ordering=ordering,
+            options=options,
+        )
+        return self.serialize_one(entity, schema=schema)

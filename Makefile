@@ -5,7 +5,8 @@
 args = $(filter-out $@,$(MAKECMDGOALS))
 
 # Command shortcuts
-mypy = uv run mypy
+mypy = MYPYPATH=src \
+	uv run mypy
 pyright = uv run pyright
 pytest = uv run pytest
 ruff = uv run ruff
@@ -36,7 +37,7 @@ docker-test:
 .PHONY: python-lint
 python-lint:
 	$(ruff) check . --preview
-	$(mypy)
+	$(mypy) src tests
 	$(pyright)
 
 .PHONY: clean

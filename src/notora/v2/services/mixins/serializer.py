@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from collections.abc import Iterable
 from typing import Literal, Protocol
 
@@ -49,7 +47,11 @@ class SerializerMixin[ModelType: GenericBaseModel, ResponseSchema: BaseResponseS
         *,
         schema: type[BaseResponseSchema] | Literal[False] | None = None,
         prefer_list_schema: bool = True,
-    ) -> list[BaseResponseSchema | ModelType]:
+    ) -> list[BaseResponseSchema] | list[ModelType]:
+        if schema is False:
+            return list(objs)
         if schema is None and prefer_list_schema:
             schema = self.list_schema or self.detail_schema
-        return [self.serialize_one(obj, schema=schema) for obj in objs]
+        if schema is None:
+            return list(objs)
+        return [schema.model_validate(obj) for obj in objs]

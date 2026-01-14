@@ -1,15 +1,11 @@
 from notora.v2.models.base import GenericBaseModel
-from notora.v2.repositories.base import Repository, SoftDeleteRepository
+from notora.v2.repositories.base import SoftDeleteRepository
 from notora.v2.repositories.config import RepoConfig
-from notora.v2.repositories.factory import RepositoryType, build_repository
+from notora.v2.repositories.factory import AnyRepository, RepositoryType, build_repository
 from notora.v2.schemas.base import BaseResponseSchema
 from notora.v2.services.base import RepositoryService, SoftDeleteRepositoryService
 from notora.v2.services.config import ServiceConfig
 
-type AnyRepository[
-    PKType,
-    ModelType: GenericBaseModel,
-] = Repository[PKType, ModelType] | SoftDeleteRepository[PKType, ModelType]
 type AnyService[
     PKType,
     ModelType: GenericBaseModel,
@@ -18,6 +14,7 @@ type AnyService[
     RepositoryService[PKType, ModelType, ResponseSchema]
     | SoftDeleteRepositoryService[PKType, ModelType, ResponseSchema]
 )
+
 type ServiceType[
     PKType,
     ModelType: GenericBaseModel,

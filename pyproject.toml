@@ -43,6 +43,7 @@ tests = [
     "pytest-cov<8.0.0,>=7.0.0",
     "pytest-asyncio<2.0.0,>=1.2.0",
     "polyfactory<4.0.0,>=3.0.0",
+    "testcontainers[postgres]>=4.14.0",
 ]
 dev = [
     "pre-commit<5.0.0,>=4.4.0",
@@ -93,14 +94,14 @@ lint.select = [
     "PGH",  # pygrep-hooks
     "FURB",  # refurb
 ]
-format.preview = true
-format.quote-style = "single"
 lint.mccabe.max-complexity = 6
 lint.pylint.max-positional-args = 7
 lint.pylint.max-args = 10
 lint.flake8-quotes.inline-quotes = "single"
 lint.flake8-implicit-str-concat.allow-multiline = false
 lint.per-file-ignores = { "__init__.py" = ["F401", "F403"], "**/test_*.py" = ["PLR091"] }
+format.preview = true
+format.quote-style = "single"
 
 [tool.pyright]
 pythonVersion = "3.13"

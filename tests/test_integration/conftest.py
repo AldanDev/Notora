@@ -1,5 +1,5 @@
 import os
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Iterator
 
 import pytest
 from sqlalchemy import text
@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
+from testcontainers.postgres import PostgresContainer
 
 from tests.test_integration.mocks.model import MockModel
 from tests.test_integration.mocks.repo import MockRepo
@@ -22,8 +23,15 @@ DB_DSN = os.getenv(
 
 
 @pytest.fixture(scope='session')
-async def db_engine() -> AsyncIterator[AsyncEngine]:
-    engine = create_async_engine(DB_DSN)
+def postgres_db() -> Iterator[PostgresContainer]:
+    with PostgresContainer() as db:
+        yield db
+
+
+@pytest.fixture(scope='session')
+async def db_engine(postgres_db: PostgresContainer) -> AsyncIterator[AsyncEngine]:
+    url = postgres_db.get_connection_url(driver='asyncpg')
+    engine = create_async_engine(url)
     yield engine
     await engine.dispose()
 

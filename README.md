@@ -1,3 +1,6 @@
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/notora)](https://badge.fury.io/py/notora)
+[![PyPI version](https://badge.fury.io/py/notora.svg)](https://badge.fury.io/py/notora)
+
 ## notora
 
 Shared base logic used across AldanDev projects.

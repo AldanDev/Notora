@@ -54,3 +54,19 @@ def test_list_by_params_respects_limit_override() -> None:
     params = QueryParams[Widget](limit=None)
     stmt = repo.list_by_params(params)
     assert ' LIMIT ' not in str(stmt)
+
+
+def test_list_uses_fallback_sort_attribute() -> None:
+    repo = Repository[object, Widget](Widget)
+    stmt = repo.list(limit=None)
+    assert ' ORDER BY ' in str(stmt)
+    assert 'widget.id' in str(stmt)
+
+
+def test_repo_config_customizes_fallback_sort_attribute() -> None:
+    config = RepoConfig[Widget](fallback_sort_attribute='name')
+    repo = Repository[object, Widget](Widget, config=config)
+    stmt = repo.list(limit=None)
+    compiled = str(stmt)
+    assert ' ORDER BY ' in compiled
+    assert 'widget.name' in compiled

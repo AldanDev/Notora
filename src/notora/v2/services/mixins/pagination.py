@@ -29,7 +29,7 @@ class PaginationServiceMixin[PKType, ModelType: GenericBaseModel](
         options: Iterable[OptionSpec[ModelType]] | None = None,
         base_query: Any | None = None,
         schema: type[BaseResponseSchema] | Literal[False] | None = None,
-    ) -> PaginatedResponseSchema[BaseResponseSchema | ModelType]:
+    ) -> 'PaginatedResponseSchema[BaseResponseSchema | ModelType]':
         data = await self.list_raw(
             session,
             filters=filters,
@@ -54,7 +54,7 @@ class PaginationServiceMixin[PKType, ModelType: GenericBaseModel](
         limit: int,
         offset: int,
         schema: type[BaseResponseSchema] | Literal[False] | None = None,
-    ) -> PaginatedResponseSchema[BaseResponseSchema | ModelType]:
+    ) -> 'PaginatedResponseSchema[BaseResponseSchema | ModelType]':
         data = (await session.scalars(data_query)).all()
         serialized = self.serialize_many(data, schema=schema)
         total = (await session.execute(count_query)).scalar_one()
@@ -67,7 +67,7 @@ class PaginationServiceMixin[PKType, ModelType: GenericBaseModel](
         params: PaginationParams[ModelType],
         *,
         schema: type[BaseResponseSchema] | Literal[False] | None = None,
-    ) -> PaginatedResponseSchema[BaseResponseSchema | ModelType]:
+    ) -> 'PaginatedResponseSchema[BaseResponseSchema | ModelType]':
         return await self.paginate(
             session,
             filters=params.filters,

@@ -1,4 +1,3 @@
-from notora.v2.services.base import RepositoryService, SoftDeleteRepositoryService
 from notora.v2.services.mixins.accessors import RepositoryAccessorMixin
 from notora.v2.services.mixins.create import CreateOrSkipServiceMixin, CreateServiceMixin
 from notora.v2.services.mixins.delete import DeleteServiceMixin, SoftDeleteServiceMixin
@@ -24,12 +23,10 @@ __all__ = [
     'PaginationServiceMixin',
     'PayloadMixin',
     'RepositoryAccessorMixin',
-    'RepositoryService',
     'RetrievalServiceMixin',
     'SerializerMixin',
     'SerializerProtocol',
     'SessionExecutorMixin',
-    'SoftDeleteRepositoryService',
     'SoftDeleteServiceMixin',
     'UpdateByFilterServiceMixin',
     'UpdateServiceMixin',

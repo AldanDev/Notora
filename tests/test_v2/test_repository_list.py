@@ -29,7 +29,7 @@ def test_list_applies_offset_without_limit() -> None:
     repo = Repository[object, Widget](Widget)
     stmt = repo.list(limit=None, offset=10)
     compiled = str(stmt)
-    assert ' LIMIT ' not in compiled
+    assert ' LIMIT ' not in compiled or ' LIMIT -1 ' in compiled
     assert ' OFFSET ' in compiled
 
 

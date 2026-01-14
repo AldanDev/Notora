@@ -6,8 +6,8 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from notora.v1.schemas.base import Filter
-from tests.test_integration.mocks.model import MockModel, MockModelFactory
-from tests.test_integration.mocks.repo import MockRepo
+from tests.v1.test_integration.mocks.model import MockModel, MockModelFactory
+from tests.v1.test_integration.mocks.repo import MockRepo
 
 
 async def _setup(db_session: AsyncSession, count: int) -> list[MockModel]:

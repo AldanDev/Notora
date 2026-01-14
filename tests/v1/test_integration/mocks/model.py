@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Mapped
 
 from notora.v1.models.base import BaseModel
-from tests.factories.base import SQLAlchemyBaseModelFactory
+from tests.v1.factories.base import SQLAlchemyBaseModelFactory
 
 
 class User(BaseModel): ...

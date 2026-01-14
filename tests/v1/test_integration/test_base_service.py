@@ -5,13 +5,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from notora.v1.schemas.base import Filter
-from tests.test_integration.mocks.model import MockModel, MockModelFactory
-from tests.test_integration.mocks.schema import (
+from tests.v1.test_integration.mocks.model import MockModel, MockModelFactory
+from tests.v1.test_integration.mocks.schema import (
     CreateMockModelRequestSchema,
     MockModelResponseSchema,
     UpdateMockModelRequestSchema,
 )
-from tests.test_integration.mocks.service import MockService
+from tests.v1.test_integration.mocks.service import MockService
 
 
 async def _setup(db_session: AsyncSession, count: int) -> list[MockModel]:

@@ -11,10 +11,10 @@ from sqlalchemy.ext.asyncio import (
 )
 from testcontainers.postgres import PostgresContainer
 
-from tests.test_integration.mocks.model import MockModel
-from tests.test_integration.mocks.repo import MockRepo
-from tests.test_integration.mocks.schema import MockModelResponseSchema
-from tests.test_integration.mocks.service import MockService
+from tests.v1.test_integration.mocks.model import MockModel
+from tests.v1.test_integration.mocks.repo import MockRepo
+from tests.v1.test_integration.mocks.schema import MockModelResponseSchema
+from tests.v1.test_integration.mocks.service import MockService
 
 DB_DSN = os.getenv(
     'DB_DSN',

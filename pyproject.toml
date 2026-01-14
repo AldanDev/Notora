@@ -108,6 +108,7 @@ pythonVersion = "3.13"
 typeCheckingMode = "basic"
 include = [
     "src",
+    "tests",
 ]
 exclude = [
     ".git",

@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import DateTime, ForeignKey, MetaData, func
+from sqlalchemy import DateTime, MetaData, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import (
     DeclarativeBase,
@@ -41,14 +41,18 @@ class UpdatableMixin:
         onupdate=func.now(),
     )
 
-    @declared_attr
-    @classmethod
-    def updated_by(cls) -> Mapped[uuid.UUID | None]:
-        return mapped_column(ForeignKey('user.id', use_alter=True))
 
+class UpdatedByMixin:
+    updated_by: Mapped[uuid.UUID | None] = mapped_column(
+        UUID,
+        nullable=True,
+    )
+
+
+class UpdatedByUserMixin(UpdatedByMixin):
     @declared_attr
     @classmethod
-    def updated_by_user(cls) -> Mapped[uuid.UUID | None]:
+    def updated_by_user(cls) -> Mapped[Any | None]:
         return relationship('User', foreign_keys=[cls.updated_by])
 
 
@@ -87,5 +91,18 @@ class UpdatableModel(GenericBaseModel, UpdatableMixin):
     __abstract__ = True
 
 
+class UpdatedByUserModel(GenericBaseModel, UpdatableMixin, UpdatedByUserMixin):
+    __abstract__ = True
+
+
 class SoftDeletableModel(GenericBaseModel, SoftDeletableMixin):
+    __abstract__ = True
+
+
+class AuditedBaseModel(
+    GenericBaseModel,
+    UpdatableMixin,
+    UpdatedByUserMixin,
+    SoftDeletableMixin,
+):
     __abstract__ = True

@@ -1,5 +1,3 @@
-from typing import TypeVar
-
 from notora.v2.models.base import GenericBaseModel
 from notora.v2.repositories.base import Repository, SoftDeleteRepository
 from notora.v2.repositories.config import RepoConfig
@@ -8,28 +6,51 @@ from notora.v2.schemas.base import BaseResponseSchema
 from notora.v2.services.base import RepositoryService, SoftDeleteRepositoryService
 from notora.v2.services.config import ServiceConfig
 
-ModelType = TypeVar('ModelType', bound=GenericBaseModel)
-ResponseSchema = TypeVar('ResponseSchema', bound=BaseResponseSchema)
-PKType = TypeVar('PKType')
+type AnyRepository[
+    PKType,
+    ModelType: GenericBaseModel,
+] = (
+    Repository[PKType, ModelType]
+    | SoftDeleteRepository[PKType, ModelType]
+)
+type AnyService[
+    PKType,
+    ModelType: GenericBaseModel,
+    ResponseSchema: BaseResponseSchema,
+] = (
+    RepositoryService[PKType, ModelType, ResponseSchema]
+    | SoftDeleteRepositoryService[PKType, ModelType, ResponseSchema]
+)
+type RepositoryType[
+    PKType,
+    ModelType: GenericBaseModel,
+] = (
+    type[Repository[PKType, ModelType]]
+    | type[SoftDeleteRepository[PKType, ModelType]]
+)
+type ServiceType[
+    PKType,
+    ModelType: GenericBaseModel,
+    ResponseSchema: BaseResponseSchema,
+] = (
+    type[RepositoryService[PKType, ModelType, ResponseSchema]]
+    | type[SoftDeleteRepositoryService[PKType, ModelType, ResponseSchema]]
+)
 
-
-def build_service(  # noqa: C901
+def build_service[  # noqa: C901
+    PKType,
+    ModelType: GenericBaseModel,
+    ResponseSchema: BaseResponseSchema,
+](
     model: type[ModelType],
     *,
-    repo: Repository[PKType, ModelType] | SoftDeleteRepository[PKType, ModelType] | None = None,
+    repo: AnyRepository[PKType, ModelType] | None = None,
     repo_config: RepoConfig[ModelType] | None = None,
     service_config: ServiceConfig[ResponseSchema] | None = None,
     soft_delete: bool = False,
-    repo_cls: type[Repository[PKType, ModelType]]
-    | type[SoftDeleteRepository[PKType, ModelType]]
-    | None = None,
-    service_cls: type[RepositoryService[PKType, ModelType, ResponseSchema]]
-    | type[SoftDeleteRepositoryService[PKType, ModelType, ResponseSchema]]
-    | None = None,
-) -> (
-    RepositoryService[PKType, ModelType, ResponseSchema]
-    | SoftDeleteRepositoryService[PKType, ModelType, ResponseSchema]
-):
+    repo_cls: RepositoryType[PKType, ModelType] | None = None,
+    service_cls: ServiceType[PKType, ModelType, ResponseSchema] | None = None,
+) -> AnyService[PKType, ModelType, ResponseSchema]:
     """Create a repository + service pair with optional config overrides."""
     if repo is None:
         repo = build_repository(
@@ -54,17 +75,16 @@ def build_service(  # noqa: C901
     return service_cls(repo, config=service_config)
 
 
-def build_service_for_repo(
-    repo: Repository[PKType, ModelType] | SoftDeleteRepository[PKType, ModelType],
+def build_service_for_repo[
+    PKType,
+    ModelType: GenericBaseModel,
+    ResponseSchema: BaseResponseSchema,
+](
+    repo: AnyRepository[PKType, ModelType],
     *,
     service_config: ServiceConfig[ResponseSchema] | None = None,
-    service_cls: type[RepositoryService[PKType, ModelType, ResponseSchema]]
-    | type[SoftDeleteRepositoryService[PKType, ModelType, ResponseSchema]]
-    | None = None,
-) -> (
-    RepositoryService[PKType, ModelType, ResponseSchema]
-    | SoftDeleteRepositoryService[PKType, ModelType, ResponseSchema]
-):
+    service_cls: ServiceType[PKType, ModelType, ResponseSchema] | None = None,
+) -> AnyService[PKType, ModelType, ResponseSchema]:
     """Create a service for an existing repository."""
     if service_cls is None:
         if isinstance(repo, SoftDeleteRepository):

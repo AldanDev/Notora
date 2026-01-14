@@ -15,10 +15,16 @@ on:
 jobs:
   quality:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version:
+          - '3.12'
+          - '3.13'
+          - '3.14'
     steps:
       - uses: actions/checkout@v6
       - uses: astral-sh/setup-uv@v7
-      - run: uv python install 3.10
+      - run: uv python install ${{ matrix.python-version }}
       - run: uv sync --group lint --group tests
       - run: make lint
       - run: make test

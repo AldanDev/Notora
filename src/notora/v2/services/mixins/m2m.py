@@ -1,6 +1,7 @@
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import Any, Literal
+from enum import StrEnum
+from typing import Any
 
 from sqlalchemy import delete, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,7 +10,11 @@ from sqlalchemy.orm import InstrumentedAttribute
 from notora.v2.models.base import GenericBaseModel
 from notora.v2.services.mixins.accessors import RepositoryAccessorMixin
 
-type M2MSyncMode = Literal['replace', 'add', 'remove']
+
+class M2MSyncMode(StrEnum):
+    REPLACE = 'replace'
+    ADD = 'add'
+    REMOVE = 'remove'
 
 
 @dataclass(slots=True)
@@ -30,7 +35,7 @@ class ManyToManySyncMixin[PKType, ModelType: GenericBaseModel](
     RepositoryAccessorMixin[PKType, ModelType],
 ):
     many_to_many_relations: Sequence[ManyToManyRelation[Any]] = ()
-    m2m_sync_mode: M2MSyncMode = 'replace'
+    m2m_sync_mode: M2MSyncMode = M2MSyncMode.REPLACE
 
     def split_m2m_payload(
         self,
@@ -45,23 +50,32 @@ class ManyToManySyncMixin[PKType, ModelType: GenericBaseModel](
                 relation_payload[relation.payload_field] = data.pop(relation.payload_field) or ()
         return data, relation_payload
 
-    async def sync_m2m_relations(  # noqa: C901
+    async def sync_m2m_relations(  # noqa: C901, PLR0912
         self,
         session: AsyncSession,
         owner_id: PKType,
         relation_payload: dict[str, Sequence[Any]],
         *,
-        mode: M2MSyncMode | None = None,
+        mode: M2MSyncMode | str | None = None,
     ) -> None:
-        sync_mode = mode or self.m2m_sync_mode
-        if sync_mode not in {'replace', 'add', 'remove'}:
+        sync_mode_raw = mode or self.m2m_sync_mode
+        if isinstance(sync_mode_raw, M2MSyncMode):
+            sync_mode: M2MSyncMode | None = sync_mode_raw
+        elif isinstance(sync_mode_raw, str):
+            try:
+                sync_mode = M2MSyncMode(sync_mode_raw)
+            except ValueError:
+                sync_mode = None
+        else:
+            sync_mode = None
+        if sync_mode is None:
             msg = 'm2m sync mode must be replace, add, or remove.'
             raise ValueError(msg)
         for relation in self.many_to_many_relations:
             if relation.payload_field not in relation_payload:
                 continue
             target_ids = list(dict.fromkeys(relation_payload[relation.payload_field] or ()))
-            if sync_mode == 'replace':
+            if sync_mode == M2MSyncMode.REPLACE:
                 delete_stmt = delete(relation.association_model).where(
                     relation.left_key == owner_id
                 )
@@ -70,14 +84,14 @@ class ManyToManySyncMixin[PKType, ModelType: GenericBaseModel](
                 continue
             if not target_ids:
                 continue
-            if sync_mode == 'remove':
+            if sync_mode == M2MSyncMode.REMOVE:
                 delete_stmt = delete(relation.association_model).where(
                     relation.left_key == owner_id,
                     relation.right_key.in_(target_ids),
                 )
                 await session.execute(delete_stmt)
                 continue
-            if sync_mode == 'add':
+            if sync_mode == M2MSyncMode.ADD:
                 existing = (
                     await session.scalars(
                         select(relation.right_key).where(

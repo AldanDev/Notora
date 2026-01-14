@@ -59,5 +59,5 @@ service = build_service(User, repo=repo, service_config=ServiceConfig(detail_sch
 from notora.v2.services import M2MSyncMode
 
 class UserService(RepositoryService[UUID, User, UserSchema]):
-    m2m_sync_mode: M2MSyncMode = 'add'
+    m2m_sync_mode: M2MSyncMode = M2MSyncMode.ADD
 ```

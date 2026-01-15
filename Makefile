@@ -21,8 +21,9 @@ sync:
 	uv sync --frozen --all-groups
 
 .PHONY: test
+postgres_version:=latest
 test:
-	$(pytest)
+	$(pytest) --postgres-version $(postgres_version)
 
 .PHONY: lint
 lint:

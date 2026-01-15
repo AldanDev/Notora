@@ -26,8 +26,9 @@ from tests.v2.test_integration.mocks.service import V2ProfileService, V2UserServ
 
 
 @pytest.fixture(scope='session')
-def postgres_db() -> Iterator[PostgresContainer]:
-    with PostgresContainer() as db:
+def postgres_db(request) -> Iterator[PostgresContainer]:  # type: ignore[no-untyped-def]
+    postgres_version = request.config.getoption('--postgres-version')
+    with PostgresContainer(f'postgres:{postgres_version}') as db:
         yield db
 
 

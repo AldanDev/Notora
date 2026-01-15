@@ -21,12 +21,16 @@ jobs:
           - '3.12'
           - '3.13'
           - '3.14'
+        postgres-version:
+          - 16
+          - 17
+          - 18
     steps:
       - uses: actions/checkout@v6
       - uses: astral-sh/setup-uv@v7
       - run: uv python install ${{ matrix.python-version }}
       - run: make lint
-      - run: make test
+      - run: make test postgres_version=${{ matrix.postgres-version }}
 
   automerge:
     runs-on: ubuntu-latest

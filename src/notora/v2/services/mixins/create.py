@@ -1,5 +1,5 @@
 from collections.abc import Iterable, Sequence
-from typing import Any, Literal
+from typing import Any
 
 from pydantic import BaseModel as PydanticModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -47,8 +47,8 @@ class CreateServiceMixin[PKType, ModelType: GenericBaseModel](
         *,
         actor_id: Any | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
-        schema: type[BaseResponseSchema] | Literal[False] | None = None,
-    ) -> BaseResponseSchema | ModelType:
+        schema: type[BaseResponseSchema] | None = None,
+    ) -> BaseResponseSchema:
         entity = await self.create_raw(session, data, actor_id=actor_id, options=options)
         return self.serialize_one(entity, schema=schema)
 
@@ -89,8 +89,8 @@ class CreateOrSkipServiceMixin[PKType, ModelType: GenericBaseModel](
         conflict_where: Iterable[FilterSpec[ModelType]] | None = None,
         actor_id: Any | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
-        schema: type[BaseResponseSchema] | Literal[False] | None = None,
-    ) -> BaseResponseSchema | ModelType | None:
+        schema: type[BaseResponseSchema] | None = None,
+    ) -> BaseResponseSchema | None:
         entity = await self.create_or_skip_raw(
             session,
             data,

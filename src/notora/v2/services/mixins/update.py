@@ -1,5 +1,5 @@
 from collections.abc import Iterable
-from typing import Any, Literal
+from typing import Any
 
 from pydantic import BaseModel as PydanticModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -48,8 +48,8 @@ class UpdateServiceMixin[PKType, ModelType: GenericBaseModel](
         *,
         actor_id: Any | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
-        schema: type[BaseResponseSchema] | Literal[False] | None = None,
-    ) -> BaseResponseSchema | ModelType:
+        schema: type[BaseResponseSchema] | None = None,
+    ) -> BaseResponseSchema:
         entity = await self.update_raw(session, pk, data, actor_id=actor_id, options=options)
         return self.serialize_one(entity, schema=schema)
 
@@ -83,8 +83,8 @@ class UpdateByFilterServiceMixin[PKType, ModelType: GenericBaseModel](
         *,
         actor_id: Any | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
-        schema: type[BaseResponseSchema] | Literal[False] | None = None,
-    ) -> BaseResponseSchema | ModelType:
+        schema: type[BaseResponseSchema] | None = None,
+    ) -> BaseResponseSchema:
         entity = await self.update_by_raw(
             session,
             filters,

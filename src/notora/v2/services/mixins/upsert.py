@@ -1,5 +1,5 @@
 from collections.abc import Iterable, Sequence
-from typing import Any, Literal
+from typing import Any
 
 from pydantic import BaseModel as PydanticModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -61,8 +61,8 @@ class UpsertServiceMixin[PKType, ModelType: GenericBaseModel](
         update_exclude: Sequence[str] | None = None,
         actor_id: Any | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
-        schema: type[BaseResponseSchema] | Literal[False] | None = None,
-    ) -> BaseResponseSchema | ModelType:
+        schema: type[BaseResponseSchema] | None = None,
+    ) -> BaseResponseSchema:
         entity = await self.upsert_raw(
             session,
             data,

@@ -1,5 +1,5 @@
 from collections.abc import Iterable
-from typing import Any, Literal
+from typing import Any
 
 from sqlalchemy import Executable
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -28,8 +28,8 @@ class PaginationServiceMixin[PKType, ModelType: GenericBaseModel](
         ordering: Iterable[OrderSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
         base_query: Any | None = None,
-        schema: type[BaseResponseSchema] | Literal[False] | None = None,
-    ) -> 'PaginatedResponseSchema[BaseResponseSchema | ModelType]':
+        schema: type[BaseResponseSchema] | None = None,
+    ) -> 'PaginatedResponseSchema[BaseResponseSchema]':
         data = await self.list_raw(
             session,
             filters=filters,
@@ -53,8 +53,8 @@ class PaginationServiceMixin[PKType, ModelType: GenericBaseModel](
         count_query: Executable,
         limit: int,
         offset: int,
-        schema: type[BaseResponseSchema] | Literal[False] | None = None,
-    ) -> 'PaginatedResponseSchema[BaseResponseSchema | ModelType]':
+        schema: type[BaseResponseSchema] | None = None,
+    ) -> 'PaginatedResponseSchema[BaseResponseSchema]':
         data = (await session.scalars(data_query)).all()
         serialized = self.serialize_many(data, schema=schema)
         total = (await session.execute(count_query)).scalar_one()
@@ -66,8 +66,8 @@ class PaginationServiceMixin[PKType, ModelType: GenericBaseModel](
         session: AsyncSession,
         params: PaginationParams[ModelType],
         *,
-        schema: type[BaseResponseSchema] | Literal[False] | None = None,
-    ) -> 'PaginatedResponseSchema[BaseResponseSchema | ModelType]':
+        schema: type[BaseResponseSchema] | None = None,
+    ) -> 'PaginatedResponseSchema[BaseResponseSchema]':
         return await self.paginate(
             session,
             filters=params.filters,

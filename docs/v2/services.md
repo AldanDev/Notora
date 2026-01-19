@@ -19,6 +19,9 @@ from notora.v2.services import RepositoryService, ServiceConfig
 service = RepositoryService(repo, config=ServiceConfig(detail_schema=UserSchema))
 ```
 
+Serialized methods require a schema. If `detail_schema` / `list_schema` are not
+configured, pass `schema=...` explicitly or use the `_raw` variants.
+
 ## Actor-aware writes (updated_by)
 
 Write methods accept `actor_id` and will populate `updated_by` when:
@@ -46,7 +49,7 @@ If `actor_id` is provided and the model does not have the field, a
 Each operation has a raw and serialized variant:
 
 - `create_raw`, `update_raw`, `upsert_raw` -> return SQLAlchemy model
-- `create`, `update`, `upsert` -> serialize to schema (or raw when `schema=False`)
+- `create`, `update`, `upsert` -> always serialize to schema
 
 ## Pagination
 
@@ -73,8 +76,8 @@ user_schema = await service.create(session, payload)
 ### Raw model response
 
 ```python
-# schema=False returns the SQLAlchemy model instead of a schema
-user_model = await service.create(session, payload, schema=False)
+# Use the raw variants to work with SQLAlchemy models directly.
+user_model = await service.create_raw(session, payload)
 ```
 
 ### Actor-aware update (updated_by)

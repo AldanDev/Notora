@@ -1,5 +1,4 @@
 from collections.abc import Iterable
-from typing import Literal
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -43,8 +42,8 @@ class RetrievalServiceMixin[PKType, ModelType: GenericBaseModel](
         pk: PKType,
         *,
         options: Iterable[OptionSpec[ModelType]] | None = None,
-        schema: type[BaseResponseSchema] | Literal[False] | None = None,
-    ) -> BaseResponseSchema | ModelType:
+        schema: type[BaseResponseSchema] | None = None,
+    ) -> BaseResponseSchema:
         entity = await self.retrieve_raw(session, pk, options=options)
         return self.serialize_one(entity, schema=schema)
 
@@ -55,8 +54,8 @@ class RetrievalServiceMixin[PKType, ModelType: GenericBaseModel](
         filters: Iterable[FilterSpec[ModelType]] | None = None,
         ordering: Iterable[OrderSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
-        schema: type[BaseResponseSchema] | Literal[False] | None = None,
-    ) -> BaseResponseSchema | ModelType:
+        schema: type[BaseResponseSchema] | None = None,
+    ) -> BaseResponseSchema:
         entity = await self.retrieve_one_by_raw(
             session,
             filters=filters,

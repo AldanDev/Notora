@@ -1,5 +1,5 @@
 from collections.abc import Iterable, Sequence
-from typing import Any, Literal
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,7 +16,7 @@ from notora.v2.schemas.base import BaseResponseSchema
 from notora.v2.services.mixins.accessors import RepositoryAccessorMixin
 from notora.v2.services.mixins.serializer import SerializerProtocol
 
-type ListResponse[ModelType: GenericBaseModel] = list[BaseResponseSchema] | list[ModelType]
+type ListResponse = list[BaseResponseSchema]
 
 
 class ListingServiceMixin[PKType, ModelType: GenericBaseModel](
@@ -55,8 +55,8 @@ class ListingServiceMixin[PKType, ModelType: GenericBaseModel](
         ordering: Iterable[OrderSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
         base_query: Any | None = None,
-        schema: type[BaseResponseSchema] | Literal[False] | None = None,
-    ) -> ListResponse[ModelType]:
+        schema: type[BaseResponseSchema] | None = None,
+    ) -> ListResponse:
         rows = await self.list_raw(
             session,
             filters=filters,
@@ -88,7 +88,7 @@ class ListingServiceMixin[PKType, ModelType: GenericBaseModel](
         session: AsyncSession,
         params: QueryParams[ModelType],
         *,
-        schema: type[BaseResponseSchema] | Literal[False] | None = None,
-    ) -> ListResponse[ModelType]:
+        schema: type[BaseResponseSchema] | None = None,
+    ) -> ListResponse:
         rows = await self.list_raw_params(session, params)
         return self.serialize_many(rows, schema=schema)

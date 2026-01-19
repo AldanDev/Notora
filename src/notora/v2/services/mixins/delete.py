@@ -14,14 +14,14 @@ class DeleteServiceMixin[PKType, ModelType: GenericBaseModel](
     RepositoryAccessorMixin[PKType, ModelType],
 ):
     async def delete(self, session: AsyncSession, pk: PKType) -> None:
-        await session.execute(self.repo.delete(pk))
+        await self.execute(session, self.repo.delete(pk))
 
     async def delete_by(
         self,
         session: AsyncSession,
         filters: Iterable[FilterSpec[ModelType]],
     ) -> None:
-        await session.execute(self.repo.delete_by(filters=filters))
+        await self.execute(session, self.repo.delete_by(filters=filters))
 
 
 class SoftDeleteServiceMixin[PKType, ModelType: GenericBaseModel](
@@ -30,11 +30,11 @@ class SoftDeleteServiceMixin[PKType, ModelType: GenericBaseModel](
     repo: SoftDeleteRepositoryProtocol[PKType, ModelType]
 
     async def soft_delete(self, session: AsyncSession, pk: PKType) -> None:
-        await session.execute(self.repo.soft_delete(pk))
+        await self.execute(session, self.repo.soft_delete(pk))
 
     async def soft_delete_by(
         self,
         session: AsyncSession,
         filters: Iterable[FilterSpec[ModelType]],
     ) -> None:
-        await session.execute(self.repo.soft_delete_by(filters=filters))
+        await self.execute(session, self.repo.soft_delete_by(filters=filters))

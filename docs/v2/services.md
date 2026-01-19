@@ -9,6 +9,17 @@ Services combine repository statements, async execution, and serialization.
 
 Both include create/update/delete/retrieve/list/paginate helpers.
 
+## Query execution
+
+All v2 service mixins route database operations through `SessionExecutorMixin`.
+This gives one consistent execution path for:
+
+- translating integrity errors (unique/FK) into domain exceptions
+- standardized execution helpers (`execute`, `execute_scalar_one`, `execute_scalars_all`)
+
+If you are adding new service logic, prefer `self.execute(...)` and
+`self.execute_scalars_all(...)` instead of direct `session.execute(...)` calls.
+
 ## ServiceConfig
 
 Use `ServiceConfig` to specify default schemas:

@@ -9,6 +9,7 @@ from sqlalchemy.orm import InstrumentedAttribute
 
 from notora.v2.models.base import GenericBaseModel
 from notora.v2.services.mixins.accessors import RepositoryAccessorMixin
+from notora.v2.services.mixins.executor import SessionExecutorMixin
 
 
 class M2MSyncMode(StrEnum):
@@ -32,6 +33,7 @@ class ManyToManyRelation[ModelType: GenericBaseModel]:
 
 
 class ManyToManySyncMixin[PKType, ModelType: GenericBaseModel](
+    SessionExecutorMixin[PKType, ModelType],
     RepositoryAccessorMixin[PKType, ModelType],
 ):
     many_to_many_relations: Sequence[ManyToManyRelation[Any]] = ()
@@ -79,7 +81,7 @@ class ManyToManySyncMixin[PKType, ModelType: GenericBaseModel](
                 delete_stmt = delete(relation.association_model).where(
                     relation.left_key == owner_id
                 )
-                await session.execute(delete_stmt)
+                await self.execute(session, delete_stmt)
             elif not target_ids:
                 continue
             if not target_ids:
@@ -89,17 +91,16 @@ class ManyToManySyncMixin[PKType, ModelType: GenericBaseModel](
                     relation.left_key == owner_id,
                     relation.right_key.in_(target_ids),
                 )
-                await session.execute(delete_stmt)
+                await self.execute(session, delete_stmt)
                 continue
             if sync_mode == M2MSyncMode.ADD:
-                existing = (
-                    await session.scalars(
-                        select(relation.right_key).where(
-                            relation.left_key == owner_id,
-                            relation.right_key.in_(target_ids),
-                        )
-                    )
-                ).all()
+                existing: list[Any] = await self.execute_scalars_all(
+                    session,
+                    select(relation.right_key).where(
+                        relation.left_key == owner_id,
+                        relation.right_key.in_(target_ids),
+                    ),
+                )
                 existing_set = set(existing)
                 target_ids = [
                     target_id for target_id in target_ids if target_id not in existing_set
@@ -107,4 +108,4 @@ class ManyToManySyncMixin[PKType, ModelType: GenericBaseModel](
                 if not target_ids:
                     continue
             rows = [relation.build_row(owner_id, target_id) for target_id in target_ids]
-            await session.execute(insert(relation.association_model).values(rows))
+            await self.execute(session, insert(relation.association_model).values(rows))

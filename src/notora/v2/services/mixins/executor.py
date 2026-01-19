@@ -1,9 +1,10 @@
 import re
-from typing import ClassVar
+from typing import Any, ClassVar, cast
 
 from sqlalchemy import exc
-from sqlalchemy.engine import Result
+from sqlalchemy.engine import Result, ScalarResult
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql import Executable
 from sqlalchemy.sql.selectable import TypedReturnsRows
 
 from notora.v2.exceptions.common import AlreadyExistsError, FKNotFoundError, NotFoundError
@@ -26,34 +27,57 @@ class SessionExecutorMixin[PKType, ModelType: GenericBaseModel]:
     def _not_found_error(self) -> str:
         return f'{self.__class__.__name__.removesuffix("Service")} not found.'
 
-    async def _execute(
+    async def execute(
         self,
         session: AsyncSession,
-        statement: TypedReturnsRows[tuple[ModelType]],
-    ) -> Result[tuple[ModelType]]:
+        statement: Executable,
+    ) -> Result[Any]:
         try:
             return await session.execute(statement)
         except exc.IntegrityError as err:
             raise self._translate_integrity_error(err) from err
+
+    async def execute_scalars(
+        self,
+        session: AsyncSession,
+        statement: Executable,
+    ) -> ScalarResult[Any]:
+        result = await self.execute(session, statement)
+        return result.scalars()
+
+    async def execute_scalars_all(
+        self,
+        session: AsyncSession,
+        statement: Executable,
+    ) -> list[Any]:
+        return list((await self.execute_scalars(session, statement)).all())
+
+    async def execute_scalar_one(
+        self,
+        session: AsyncSession,
+        statement: Executable,
+    ) -> Any:
+        result = await self.execute(session, statement)
+        return result.scalar_one()
 
     async def execute_for_one(
         self,
         session: AsyncSession,
         statement: TypedReturnsRows[tuple[ModelType]],
     ) -> ModelType:
-        result = await self._execute(session, statement)
+        result = await self.execute(session, statement)
         entity = result.unique().scalar_one_or_none()
         if entity is None:
             raise NotFoundError[PKType](self._not_found_error)
-        return entity
+        return cast(ModelType, entity)
 
     async def execute_optional(
         self,
         session: AsyncSession,
         statement: TypedReturnsRows[tuple[ModelType]],
     ) -> ModelType | None:
-        result = await self._execute(session, statement)
-        return result.unique().scalar_one_or_none()
+        result = await self.execute(session, statement)
+        return cast(ModelType | None, result.unique().scalar_one_or_none())
 
     def _translate_integrity_error(self, err: exc.IntegrityError) -> Exception:
         if match := self._fk_constraint_pattern.match(err.args[0]):

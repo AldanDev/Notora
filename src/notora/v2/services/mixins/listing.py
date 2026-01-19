@@ -14,12 +14,14 @@ from notora.v2.repositories.types import (
 )
 from notora.v2.schemas.base import BaseResponseSchema
 from notora.v2.services.mixins.accessors import RepositoryAccessorMixin
+from notora.v2.services.mixins.executor import SessionExecutorMixin
 from notora.v2.services.mixins.serializer import SerializerProtocol
 
 type ListResponse = list[BaseResponseSchema]
 
 
 class ListingServiceMixin[PKType, ModelType: GenericBaseModel](
+    SessionExecutorMixin[PKType, ModelType],
     RepositoryAccessorMixin[PKType, ModelType],
     SerializerProtocol[ModelType],
 ):
@@ -42,8 +44,7 @@ class ListingServiceMixin[PKType, ModelType: GenericBaseModel](
             options=options,
             base_query=base_query,
         )
-        result = await session.scalars(query)
-        return result.all()
+        return await self.execute_scalars_all(session, query)
 
     async def list(
         self,

@@ -8,7 +8,6 @@ from sqlalchemy.orm import InstrumentedAttribute
 from notora.v2.models.base import GenericBaseModel
 from notora.v2.repositories.types import FilterSpec, OptionSpec
 from notora.v2.schemas.base import BaseResponseSchema
-from notora.v2.services.mixins.executor import SessionExecutorMixin
 from notora.v2.services.mixins.m2m import ManyToManySyncMixin
 from notora.v2.services.mixins.payload import PayloadMixin
 from notora.v2.services.mixins.serializer import SerializerProtocol
@@ -16,7 +15,6 @@ from notora.v2.services.mixins.updated_by import UpdatedByServiceMixin
 
 
 class UpsertServiceMixin[PKType, ModelType: GenericBaseModel](
-    SessionExecutorMixin[PKType, ModelType],
     ManyToManySyncMixin[PKType, ModelType],
     UpdatedByServiceMixin[PKType, ModelType],
     PayloadMixin[ModelType],

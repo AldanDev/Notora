@@ -17,7 +17,6 @@ from notora.v2.services.mixins.updated_by import UpdatedByServiceMixin
 
 
 class CreateServiceMixin[PKType, ModelType: GenericBaseModel](
-    SessionExecutorMixin[PKType, ModelType],
     ManyToManySyncMixin[PKType, ModelType],
     UpdatedByServiceMixin[PKType, ModelType],
     PayloadMixin[ModelType],

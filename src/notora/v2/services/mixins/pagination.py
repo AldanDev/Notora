@@ -41,7 +41,7 @@ class PaginationServiceMixin[PKType, ModelType: GenericBaseModel](
         )
         serialized = self.serialize_many(data, schema=schema)
         total_query = self.repo.count(filters=filters)
-        total = (await session.execute(total_query)).scalar_one()
+        total: int = await self.execute_scalar_one(session, total_query)
         meta = PaginationMetaSchema.calculate(total=total, limit=limit, offset=offset)
         return PaginatedResponseSchema(meta=meta, data=serialized)
 
@@ -55,9 +55,9 @@ class PaginationServiceMixin[PKType, ModelType: GenericBaseModel](
         offset: int,
         schema: type[BaseResponseSchema] | None = None,
     ) -> 'PaginatedResponseSchema[BaseResponseSchema]':
-        data = (await session.scalars(data_query)).all()
+        data: list[ModelType] = await self.execute_scalars_all(session, data_query)
         serialized = self.serialize_many(data, schema=schema)
-        total = (await session.execute(count_query)).scalar_one()
+        total: int = await self.execute_scalar_one(session, count_query)
         meta = PaginationMetaSchema.calculate(total=total, limit=limit, offset=offset)
         return PaginatedResponseSchema(meta=meta, data=serialized)
 

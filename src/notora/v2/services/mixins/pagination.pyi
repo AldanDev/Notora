@@ -13,6 +13,8 @@ from notora.v2.schemas.base import (
 )
 from notora.v2.services.mixins.listing import ListingServiceMixin
 
+__all__ = ['PaginationServiceMixin']
+
 class PaginationServiceMixin[
     PKType,
     ModelType: GenericBaseModel,
@@ -21,6 +23,8 @@ class PaginationServiceMixin[
 ](
     ListingServiceMixin[PKType, ModelType, DetailSchema, ListSchema],
 ):
+    __type_params__: tuple[object, ...]
+
     @overload
     async def paginate(
         self,

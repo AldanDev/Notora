@@ -14,6 +14,8 @@ from notora.v2.services.mixins.payload import PayloadMixin
 from notora.v2.services.mixins.serializer import SerializerProtocol
 from notora.v2.services.mixins.updated_by import UpdatedByServiceMixin
 
+__all__ = ['UpdateByFilterServiceMixin', 'UpdateServiceMixin']
+
 class UpdateServiceMixin[
     PKType,
     ModelType: GenericBaseModel,
@@ -25,6 +27,8 @@ class UpdateServiceMixin[
     PayloadMixin[ModelType],
     SerializerProtocol[ModelType, DetailSchema, ListSchema],
 ):
+    __type_params__: tuple[object, ...]
+
     async def update_raw(
         self,
         session: AsyncSession,
@@ -69,6 +73,8 @@ class UpdateByFilterServiceMixin[
     PayloadMixin[ModelType],
     SerializerProtocol[ModelType, DetailSchema, ListSchema],
 ):
+    __type_params__: tuple[object, ...]
+
     async def update_by_raw(
         self,
         session: AsyncSession,

@@ -17,7 +17,9 @@ from notora.v2.services.mixins.accessors import RepositoryAccessorMixin
 from notora.v2.services.mixins.executor import SessionExecutorMixin
 from notora.v2.services.mixins.serializer import SerializerProtocol
 
-type ListResponse[ListSchema: BaseResponseSchema] = list[ListSchema]
+__all__ = ['ListResponse', 'ListingServiceMixin']
+
+ListResponse = list
 
 
 class ListingServiceMixin[

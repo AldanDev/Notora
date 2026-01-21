@@ -17,6 +17,8 @@ from notora.v2.services.mixins.accessors import RepositoryAccessorMixin
 from notora.v2.services.mixins.executor import SessionExecutorMixin
 from notora.v2.services.mixins.serializer import SerializerProtocol
 
+__all__ = ['ListResponse', 'ListingServiceMixin']
+
 type ListResponse[ListSchema: BaseResponseSchema] = list[ListSchema]
 
 class ListingServiceMixin[
@@ -29,6 +31,8 @@ class ListingServiceMixin[
     RepositoryAccessorMixin[PKType, ModelType],
     SerializerProtocol[ModelType, DetailSchema, ListSchema],
 ):
+    __type_params__: tuple[object, ...]
+
     async def list_raw(
         self,
         session: AsyncSession,

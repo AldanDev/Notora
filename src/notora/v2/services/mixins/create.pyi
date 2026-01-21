@@ -15,6 +15,8 @@ from notora.v2.services.mixins.payload import PayloadMixin
 from notora.v2.services.mixins.serializer import SerializerProtocol
 from notora.v2.services.mixins.updated_by import UpdatedByServiceMixin
 
+__all__ = ['CreateOrSkipServiceMixin', 'CreateServiceMixin']
+
 class CreateServiceMixin[
     PKType,
     ModelType: GenericBaseModel,
@@ -26,6 +28,8 @@ class CreateServiceMixin[
     PayloadMixin[ModelType],
     SerializerProtocol[ModelType, DetailSchema, ListSchema],
 ):
+    __type_params__: tuple[object, ...]
+
     async def create_raw(
         self,
         session: AsyncSession,
@@ -67,6 +71,8 @@ class CreateOrSkipServiceMixin[
     PayloadMixin[ModelType],
     SerializerProtocol[ModelType, DetailSchema, ListSchema],
 ):
+    __type_params__: tuple[object, ...]
+
     async def create_or_skip_raw(
         self,
         session: AsyncSession,

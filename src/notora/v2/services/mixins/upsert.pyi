@@ -13,6 +13,8 @@ from notora.v2.services.mixins.payload import PayloadMixin
 from notora.v2.services.mixins.serializer import SerializerProtocol
 from notora.v2.services.mixins.updated_by import UpdatedByServiceMixin
 
+__all__ = ['UpsertServiceMixin']
+
 class UpsertServiceMixin[
     PKType,
     ModelType: GenericBaseModel,
@@ -24,6 +26,8 @@ class UpsertServiceMixin[
     PayloadMixin[ModelType],
     SerializerProtocol[ModelType, DetailSchema, ListSchema],
 ):
+    __type_params__: tuple[object, ...]
+
     async def upsert_raw(
         self,
         session: AsyncSession,

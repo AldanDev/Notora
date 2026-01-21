@@ -14,6 +14,8 @@ from notora.v2.services.mixins.payload import PayloadMixin
 from notora.v2.services.mixins.serializer import SerializerProtocol
 from notora.v2.services.mixins.updated_by import UpdatedByServiceMixin
 
+__all__ = ['UpdateByFilterServiceMixin', 'UpdateServiceMixin']
+
 
 class UpdateServiceMixin[
     PKType,

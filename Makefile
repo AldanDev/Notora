@@ -8,6 +8,8 @@ args = $(filter-out $@,$(MAKECMDGOALS))
 mypy = MYPYPATH=src \
 	uv run --group lint mypy
 pyright = uv run --group lint pyright
+stubtest = MYPYPATH=src PYTHONPATH=src \
+	uv run --group lint stubtest
 pytest = uv run --group tests pytest
 ruff = uv run --group lint --group tests ruff
 
@@ -30,6 +32,17 @@ lint:
 	$(ruff) check . --preview
 	$(mypy) src tests
 	$(pyright)
+	$(MAKE) stubtest
+
+.PHONY: stubtest
+stubtest:
+	@modules=$$(find src/notora -name '*.pyi' -print \
+		| sed -e 's#^src/##' -e 's#/#.#g' -e 's#\.pyi$$##' -e 's#\.__init__$$##'); \
+	if [ -z "$$modules" ]; then \
+		echo "No .pyi modules found under src/notora"; \
+		exit 1; \
+	fi; \
+	$(stubtest) $$modules
 
 .PHONY: clean
 clean:
@@ -46,5 +59,4 @@ clean:
 	rm -f .coverage
 	rm -f .coverage.*
 	rm -rf .venv
-	rm -rf artefacts
 	rm -rf .hypothesis

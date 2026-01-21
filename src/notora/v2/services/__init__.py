@@ -1,7 +1,12 @@
 """Service mixins and helpers for v2."""
 
-from notora.v2.services.base import RepositoryService, SoftDeleteRepositoryService
-from notora.v2.services.config import ServiceConfig
+from notora.v2.services.base import (
+    RepositoryService,
+    RepositoryServiceD,
+    SoftDeleteRepositoryService,
+    SoftDeleteRepositoryServiceD,
+)
+from notora.v2.services.config import ServiceConfig, ServiceConfigD
 from notora.v2.services.factory import build_service, build_service_for_repo
 from notora.v2.services.mixins import (
     CreateOrSkipServiceMixin,
@@ -37,12 +42,15 @@ __all__ = [
     'PayloadMixin',
     'RepositoryAccessorMixin',
     'RepositoryService',
+    'RepositoryServiceD',
     'RetrievalServiceMixin',
     'SerializerMixin',
     'SerializerProtocol',
     'ServiceConfig',
+    'ServiceConfigD',
     'SessionExecutorMixin',
     'SoftDeleteRepositoryService',
+    'SoftDeleteRepositoryServiceD',
     'SoftDeleteServiceMixin',
     'UpdateByFilterServiceMixin',
     'UpdateServiceMixin',

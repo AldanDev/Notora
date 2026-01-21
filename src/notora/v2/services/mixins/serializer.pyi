@@ -4,11 +4,15 @@ from typing import Protocol, overload
 from notora.v2.models.base import GenericBaseModel
 from notora.v2.schemas.base import BaseResponseSchema
 
+__all__ = ['SerializerMixin', 'SerializerProtocol']
+
 class SerializerProtocol[
     ModelType: GenericBaseModel,
     DetailSchema: BaseResponseSchema,
     ListSchema: BaseResponseSchema = DetailSchema,
 ](Protocol):
+    __type_params__: tuple[object, ...]
+
     @overload
     def serialize_one(
         self,
@@ -45,6 +49,7 @@ class SerializerMixin[
     DetailSchema: BaseResponseSchema,
     ListSchema: BaseResponseSchema = DetailSchema,
 ]:
+    __type_params__: tuple[object, ...]
     detail_schema: type[DetailSchema] | None
     list_schema: type[ListSchema] | None
 

@@ -35,6 +35,30 @@ service = RepositoryService(repo, config=ServiceConfig(detail_schema=UserSchema)
 Serialized methods require a schema. If `detail_schema` / `list_schema` are not
 configured, pass `schema=...` explicitly or use the `_raw` variants.
 
+## Detail vs list schema
+
+- `detail_schema` is used for single-entity responses (create/retrieve/update).
+- `list_schema` is used for list and pagination responses.
+- `list_schema` defaults to `detail_schema` when omitted.
+
+You can use `RepositoryServiceD`, `SoftDeleteRepositoryServiceD`, and
+`ServiceConfigD` when both schemas are the same.
+
+### Class defaults
+
+You can declare default schemas directly on the service class:
+
+```python
+from uuid import UUID
+
+from notora.v2.services import RepositoryService
+
+
+class UserService(RepositoryService[UUID, User, UserDetailSchema, UserListSchema]):
+    detail_schema = UserDetailSchema
+    list_schema = UserListSchema
+```
+
 ## Actor-aware writes (updated_by)
 
 Write methods accept `actor_id` and will populate `updated_by` when:

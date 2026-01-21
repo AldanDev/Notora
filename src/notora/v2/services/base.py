@@ -62,3 +62,17 @@ class SoftDeleteRepositoryService[
         config: ServiceConfig[DetailSchema, ListSchema] | None = None,
     ) -> None:
         super().__init__(repo, config=config)
+
+
+type RepositoryServiceD[
+    PKType,
+    ModelType: GenericBaseModel,
+    DetailSchema: BaseResponseSchema,
+] = RepositoryService[PKType, ModelType, DetailSchema, DetailSchema]
+
+
+type SoftDeleteRepositoryServiceD[
+    PKType,
+    ModelType: GenericBaseModel,
+    DetailSchema: BaseResponseSchema,
+] = SoftDeleteRepositoryService[PKType, ModelType, DetailSchema, DetailSchema]

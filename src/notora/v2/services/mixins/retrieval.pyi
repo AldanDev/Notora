@@ -10,6 +10,8 @@ from notora.v2.services.mixins.accessors import RepositoryAccessorMixin
 from notora.v2.services.mixins.executor import SessionExecutorMixin
 from notora.v2.services.mixins.serializer import SerializerProtocol
 
+__all__ = ['RetrievalServiceMixin']
+
 class RetrievalServiceMixin[
     PKType,
     ModelType: GenericBaseModel,
@@ -20,6 +22,8 @@ class RetrievalServiceMixin[
     RepositoryAccessorMixin[PKType, ModelType],
     SerializerProtocol[ModelType, DetailSchema, ListSchema],
 ):
+    __type_params__: tuple[object, ...]
+
     async def retrieve_raw(
         self,
         session: AsyncSession,

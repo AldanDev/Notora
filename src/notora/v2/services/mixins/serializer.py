@@ -4,6 +4,8 @@ from typing import Protocol, cast
 from notora.v2.models.base import GenericBaseModel
 from notora.v2.schemas.base import BaseResponseSchema
 
+__all__ = ['SerializerMixin', 'SerializerProtocol']
+
 
 class SerializerProtocol[
     ModelType: GenericBaseModel,

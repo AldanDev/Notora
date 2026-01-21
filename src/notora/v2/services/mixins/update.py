@@ -15,11 +15,16 @@ from notora.v2.services.mixins.serializer import SerializerProtocol
 from notora.v2.services.mixins.updated_by import UpdatedByServiceMixin
 
 
-class UpdateServiceMixin[PKType, ModelType: GenericBaseModel](
+class UpdateServiceMixin[
+    PKType,
+    ModelType: GenericBaseModel,
+    DetailSchema: BaseResponseSchema,
+    ListSchema: BaseResponseSchema = DetailSchema,
+](
     ManyToManySyncMixin[PKType, ModelType],
     UpdatedByServiceMixin[PKType, ModelType],
     PayloadMixin[ModelType],
-    SerializerProtocol[ModelType],
+    SerializerProtocol[ModelType, DetailSchema, ListSchema],
 ):
     async def update_raw(
         self,
@@ -47,18 +52,23 @@ class UpdateServiceMixin[PKType, ModelType: GenericBaseModel](
         *,
         actor_id: Any | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
-        schema: type[BaseResponseSchema] | None = None,
-    ) -> BaseResponseSchema:
+        schema: type[DetailSchema] | None = None,
+    ) -> DetailSchema:
         entity = await self.update_raw(session, pk, data, actor_id=actor_id, options=options)
         return self.serialize_one(entity, schema=schema)
 
 
-class UpdateByFilterServiceMixin[PKType, ModelType: GenericBaseModel](
+class UpdateByFilterServiceMixin[
+    PKType,
+    ModelType: GenericBaseModel,
+    DetailSchema: BaseResponseSchema,
+    ListSchema: BaseResponseSchema = DetailSchema,
+](
     SessionExecutorMixin[PKType, ModelType],
     RepositoryAccessorMixin[PKType, ModelType],
     UpdatedByServiceMixin[PKType, ModelType],
     PayloadMixin[ModelType],
-    SerializerProtocol[ModelType],
+    SerializerProtocol[ModelType, DetailSchema, ListSchema],
 ):
     async def update_by_raw(
         self,
@@ -82,8 +92,8 @@ class UpdateByFilterServiceMixin[PKType, ModelType: GenericBaseModel](
         *,
         actor_id: Any | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
-        schema: type[BaseResponseSchema] | None = None,
-    ) -> BaseResponseSchema:
+        schema: type[DetailSchema] | None = None,
+    ) -> DetailSchema:
         entity = await self.update_by_raw(
             session,
             filters,

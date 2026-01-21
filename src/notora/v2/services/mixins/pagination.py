@@ -15,8 +15,13 @@ from notora.v2.schemas.base import (
 from notora.v2.services.mixins.listing import ListingServiceMixin
 
 
-class PaginationServiceMixin[PKType, ModelType: GenericBaseModel](
-    ListingServiceMixin[PKType, ModelType],
+class PaginationServiceMixin[
+    PKType,
+    ModelType: GenericBaseModel,
+    DetailSchema: BaseResponseSchema,
+    ListSchema: BaseResponseSchema = DetailSchema,
+](
+    ListingServiceMixin[PKType, ModelType, DetailSchema, ListSchema],
 ):
     async def paginate(
         self,
@@ -28,8 +33,8 @@ class PaginationServiceMixin[PKType, ModelType: GenericBaseModel](
         ordering: Iterable[OrderSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
         base_query: Any | None = None,
-        schema: type[BaseResponseSchema] | None = None,
-    ) -> 'PaginatedResponseSchema[BaseResponseSchema]':
+        schema: type[ListSchema] | None = None,
+    ) -> 'PaginatedResponseSchema[ListSchema]':
         data = await self.list_raw(
             session,
             filters=filters,
@@ -53,8 +58,8 @@ class PaginationServiceMixin[PKType, ModelType: GenericBaseModel](
         count_query: Executable,
         limit: int,
         offset: int,
-        schema: type[BaseResponseSchema] | None = None,
-    ) -> 'PaginatedResponseSchema[BaseResponseSchema]':
+        schema: type[ListSchema] | None = None,
+    ) -> 'PaginatedResponseSchema[ListSchema]':
         data: list[ModelType] = await self.execute_scalars_all(session, data_query)
         serialized = self.serialize_many(data, schema=schema)
         total: int = await self.execute_scalar_one(session, count_query)
@@ -66,8 +71,8 @@ class PaginationServiceMixin[PKType, ModelType: GenericBaseModel](
         session: AsyncSession,
         params: PaginationParams[ModelType],
         *,
-        schema: type[BaseResponseSchema] | None = None,
-    ) -> 'PaginatedResponseSchema[BaseResponseSchema]':
+        schema: type[ListSchema] | None = None,
+    ) -> 'PaginatedResponseSchema[ListSchema]':
         return await self.paginate(
             session,
             filters=params.filters,

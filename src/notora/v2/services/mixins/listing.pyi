@@ -1,5 +1,5 @@
 from collections.abc import Iterable, Sequence
-from typing import Any
+from typing import Any, overload
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,7 +18,6 @@ from notora.v2.services.mixins.executor import SessionExecutorMixin
 from notora.v2.services.mixins.serializer import SerializerProtocol
 
 type ListResponse[ListSchema: BaseResponseSchema] = list[ListSchema]
-
 
 class ListingServiceMixin[
     PKType,
@@ -40,17 +39,8 @@ class ListingServiceMixin[
         ordering: Iterable[OrderSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
         base_query: Any | None = None,
-    ) -> Sequence[ModelType]:
-        query = self.repo.list(
-            filters=filters,
-            limit=limit,
-            offset=offset,
-            ordering=ordering,
-            options=options,
-            base_query=base_query,
-        )
-        return await self.execute_scalars_all(session, query)
-
+    ) -> Sequence[ModelType]: ...
+    @overload
     async def list(
         self,
         session: AsyncSession,
@@ -61,40 +51,39 @@ class ListingServiceMixin[
         ordering: Iterable[OrderSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
         base_query: Any | None = None,
-        schema: type[ListSchema] | None = None,
-    ) -> ListResponse[ListSchema]:
-        rows = await self.list_raw(
-            session,
-            filters=filters,
-            limit=limit,
-            offset=offset,
-            ordering=ordering,
-            options=options,
-            base_query=base_query,
-        )
-        return self.serialize_many(rows, schema=schema)
-
+        schema: None = ...,
+    ) -> ListResponse[ListSchema]: ...
+    @overload
+    async def list[SchemaT: BaseResponseSchema](
+        self,
+        session: AsyncSession,
+        *,
+        filters: Iterable[FilterSpec[ModelType]] | None = None,
+        limit: int | DefaultLimit | None = DEFAULT_LIMIT,
+        offset: int = 0,
+        ordering: Iterable[OrderSpec[ModelType]] | None = None,
+        options: Iterable[OptionSpec[ModelType]] | None = None,
+        base_query: Any | None = None,
+        schema: type[SchemaT],
+    ) -> ListResponse[SchemaT]: ...
     async def list_raw_params(
         self,
         session: AsyncSession,
         params: QueryParams[ModelType],
-    ) -> Sequence[ModelType]:
-        return await self.list_raw(
-            session,
-            filters=params.filters,
-            limit=params.limit,
-            offset=params.offset,
-            ordering=params.ordering,
-            options=params.options,
-            base_query=params.base_query,
-        )
-
+    ) -> Sequence[ModelType]: ...
+    @overload
     async def list_params(
         self,
         session: AsyncSession,
         params: QueryParams[ModelType],
         *,
-        schema: type[ListSchema] | None = None,
-    ) -> ListResponse[ListSchema]:
-        rows = await self.list_raw_params(session, params)
-        return self.serialize_many(rows, schema=schema)
+        schema: None = ...,
+    ) -> ListResponse[ListSchema]: ...
+    @overload
+    async def list_params[SchemaT: BaseResponseSchema](
+        self,
+        session: AsyncSession,
+        params: QueryParams[ModelType],
+        *,
+        schema: type[SchemaT],
+    ) -> ListResponse[SchemaT]: ...

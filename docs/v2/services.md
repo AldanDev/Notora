@@ -4,8 +4,10 @@ Services combine repository statements, async execution, and serialization.
 
 ## Base services
 
-- `RepositoryService[PKType, ModelType, ResponseSchema]`
-- `SoftDeleteRepositoryService[PKType, ModelType, ResponseSchema]`
+- `RepositoryService[PKType, ModelType, DetailSchema, ListSchema]`
+- `SoftDeleteRepositoryService[PKType, ModelType, DetailSchema, ListSchema]`
+
+`ListSchema` defaults to `DetailSchema` if omitted.
 
 Both include create/update/delete/retrieve/list/paginate helpers.
 

@@ -142,4 +142,4 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/notora"]
-include = ["src/notora/py.typed"]
+include = ["src/notora/py.typed", "src/notora/**/*.pyi"]

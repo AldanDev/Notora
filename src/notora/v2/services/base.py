@@ -11,15 +11,20 @@ from notora.v2.services.mixins.update import UpdateByFilterServiceMixin, UpdateS
 from notora.v2.services.mixins.upsert import UpsertServiceMixin
 
 
-class RepositoryService[PKType, ModelType: GenericBaseModel, ResponseSchema: BaseResponseSchema](
-    SerializerMixin[ModelType, ResponseSchema],
-    PaginationServiceMixin[PKType, ModelType],
-    RetrievalServiceMixin[PKType, ModelType],
-    CreateServiceMixin[PKType, ModelType],
-    CreateOrSkipServiceMixin[PKType, ModelType],
-    UpsertServiceMixin[PKType, ModelType],
-    UpdateServiceMixin[PKType, ModelType],
-    UpdateByFilterServiceMixin[PKType, ModelType],
+class RepositoryService[
+    PKType,
+    ModelType: GenericBaseModel,
+    DetailSchema: BaseResponseSchema,
+    ListSchema: BaseResponseSchema = DetailSchema,
+](
+    SerializerMixin[ModelType, DetailSchema, ListSchema],
+    PaginationServiceMixin[PKType, ModelType, DetailSchema, ListSchema],
+    RetrievalServiceMixin[PKType, ModelType, DetailSchema, ListSchema],
+    CreateServiceMixin[PKType, ModelType, DetailSchema, ListSchema],
+    CreateOrSkipServiceMixin[PKType, ModelType, DetailSchema, ListSchema],
+    UpsertServiceMixin[PKType, ModelType, DetailSchema, ListSchema],
+    UpdateServiceMixin[PKType, ModelType, DetailSchema, ListSchema],
+    UpdateByFilterServiceMixin[PKType, ModelType, DetailSchema, ListSchema],
     DeleteServiceMixin[PKType, ModelType],
 ):
     """Turnkey async service that glues repository access and serialization together."""
@@ -28,7 +33,7 @@ class RepositoryService[PKType, ModelType: GenericBaseModel, ResponseSchema: Bas
         self,
         repo: RepositoryProtocol[PKType, ModelType],
         *,
-        config: ServiceConfig[ResponseSchema] | None = None,
+        config: ServiceConfig[DetailSchema, ListSchema] | None = None,
     ) -> None:
         self.repo = repo
         if config is None:
@@ -42,9 +47,10 @@ class RepositoryService[PKType, ModelType: GenericBaseModel, ResponseSchema: Bas
 class SoftDeleteRepositoryService[
     PKType,
     ModelType: GenericBaseModel,
-    ResponseSchema: BaseResponseSchema,
+    DetailSchema: BaseResponseSchema,
+    ListSchema: BaseResponseSchema = DetailSchema,
 ](
-    RepositoryService[PKType, ModelType, ResponseSchema],
+    RepositoryService[PKType, ModelType, DetailSchema, ListSchema],
     SoftDeleteServiceMixin[PKType, ModelType],
 ):
     """Repository service variant that exposes soft-delete helpers."""
@@ -53,6 +59,6 @@ class SoftDeleteRepositoryService[
         self,
         repo: SoftDeleteRepositoryProtocol[PKType, ModelType],
         *,
-        config: ServiceConfig[ResponseSchema] | None = None,
+        config: ServiceConfig[DetailSchema, ListSchema] | None = None,
     ) -> None:
         super().__init__(repo, config=config)

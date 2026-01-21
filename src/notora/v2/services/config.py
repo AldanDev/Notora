@@ -4,6 +4,9 @@ from notora.v2.schemas.base import BaseResponseSchema
 
 
 @dataclass(slots=True)
-class ServiceConfig[ResponseSchema: BaseResponseSchema]:
-    detail_schema: type[ResponseSchema] | None = None
-    list_schema: type[ResponseSchema] | None = None
+class ServiceConfig[
+    DetailSchema: BaseResponseSchema,
+    ListSchema: BaseResponseSchema = DetailSchema,
+]:
+    detail_schema: type[DetailSchema] | None = None
+    list_schema: type[ListSchema] | None = None

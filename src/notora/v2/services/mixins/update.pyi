@@ -1,9 +1,8 @@
-from collections.abc import Iterable, Sequence
-from typing import Any
+from collections.abc import Iterable
+from typing import Any, overload
 
 from pydantic import BaseModel as PydanticModel
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import InstrumentedAttribute
 
 from notora.v2.models.base import GenericBaseModel
 from notora.v2.repositories.types import FilterSpec, OptionSpec
@@ -15,8 +14,7 @@ from notora.v2.services.mixins.payload import PayloadMixin
 from notora.v2.services.mixins.serializer import SerializerProtocol
 from notora.v2.services.mixins.updated_by import UpdatedByServiceMixin
 
-
-class CreateServiceMixin[
+class UpdateServiceMixin[
     PKType,
     ModelType: GenericBaseModel,
     DetailSchema: BaseResponseSchema,
@@ -27,37 +25,39 @@ class CreateServiceMixin[
     PayloadMixin[ModelType],
     SerializerProtocol[ModelType, DetailSchema, ListSchema],
 ):
-    async def create_raw(
+    async def update_raw(
         self,
         session: AsyncSession,
+        pk: PKType,
         data: PydanticModel | dict[str, Any],
         *,
         actor_id: Any | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
-    ) -> ModelType:
-        payload = self._dump_payload(data, exclude_unset=False)
-        payload, relation_payload = self.split_m2m_payload(payload)
-        payload = self._apply_updated_by(payload, actor_id)
-        query = self.repo.create(payload, options=options)
-        entity = await self.execute_for_one(session, query)
-        if relation_payload:
-            await self.sync_m2m_relations(session, self._extract_pk(entity), relation_payload)
-        return entity
-
-    async def create(
+    ) -> ModelType: ...
+    @overload
+    async def update(
         self,
         session: AsyncSession,
+        pk: PKType,
         data: PydanticModel | dict[str, Any],
         *,
         actor_id: Any | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
-        schema: type[DetailSchema] | None = None,
-    ) -> DetailSchema:
-        entity = await self.create_raw(session, data, actor_id=actor_id, options=options)
-        return self.serialize_one(entity, schema=schema)
+        schema: None = ...,
+    ) -> DetailSchema: ...
+    @overload
+    async def update[SchemaT: BaseResponseSchema](
+        self,
+        session: AsyncSession,
+        pk: PKType,
+        data: PydanticModel | dict[str, Any],
+        *,
+        actor_id: Any | None = None,
+        options: Iterable[OptionSpec[ModelType]] | None = None,
+        schema: type[SchemaT],
+    ) -> SchemaT: ...
 
-
-class CreateOrSkipServiceMixin[
+class UpdateByFilterServiceMixin[
     PKType,
     ModelType: GenericBaseModel,
     DetailSchema: BaseResponseSchema,
@@ -69,45 +69,34 @@ class CreateOrSkipServiceMixin[
     PayloadMixin[ModelType],
     SerializerProtocol[ModelType, DetailSchema, ListSchema],
 ):
-    async def create_or_skip_raw(
+    async def update_by_raw(
         self,
         session: AsyncSession,
+        filters: Iterable[FilterSpec[ModelType]],
         data: PydanticModel | dict[str, Any],
         *,
-        conflict_columns: Sequence[InstrumentedAttribute[Any]],
-        conflict_where: Iterable[FilterSpec[ModelType]] | None = None,
         actor_id: Any | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
-    ) -> ModelType | None:
-        payload = self._dump_payload(data, exclude_unset=False)
-        payload = self._apply_updated_by(payload, actor_id)
-        query = self.repo.create_or_skip(
-            payload,
-            conflict_columns=conflict_columns,
-            conflict_where=conflict_where,
-            options=options,
-        )
-        return await self.execute_optional(session, query)
-
-    async def create_or_skip(
+    ) -> ModelType: ...
+    @overload
+    async def update_by(
         self,
         session: AsyncSession,
+        filters: Iterable[FilterSpec[ModelType]],
         data: PydanticModel | dict[str, Any],
         *,
-        conflict_columns: Sequence[InstrumentedAttribute[Any]],
-        conflict_where: Iterable[FilterSpec[ModelType]] | None = None,
         actor_id: Any | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
-        schema: type[DetailSchema] | None = None,
-    ) -> DetailSchema | None:
-        entity = await self.create_or_skip_raw(
-            session,
-            data,
-            conflict_columns=conflict_columns,
-            conflict_where=conflict_where,
-            actor_id=actor_id,
-            options=options,
-        )
-        if entity is None:
-            return None
-        return self.serialize_one(entity, schema=schema)
+        schema: None = ...,
+    ) -> DetailSchema: ...
+    @overload
+    async def update_by[SchemaT: BaseResponseSchema](
+        self,
+        session: AsyncSession,
+        filters: Iterable[FilterSpec[ModelType]],
+        data: PydanticModel | dict[str, Any],
+        *,
+        actor_id: Any | None = None,
+        options: Iterable[OptionSpec[ModelType]] | None = None,
+        schema: type[SchemaT],
+    ) -> SchemaT: ...

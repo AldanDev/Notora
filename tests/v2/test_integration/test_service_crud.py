@@ -1,4 +1,3 @@
-from typing import cast
 from uuid import uuid4
 
 import pytest
@@ -94,8 +93,7 @@ async def test_service_list_and_paginate_params(
     items = await user_service.list_params(db_session, params)
 
     assert isinstance(items[0], V2UserResponseSchema)
-    typed_items = cast(list[V2UserResponseSchema], items)
-    assert [item.email for item in typed_items] == ['a@ex.com', 'c@ex.com']
+    assert [item.email for item in items] == ['a@ex.com', 'c@ex.com']
 
     limit = 2
     page = await user_service.paginate(

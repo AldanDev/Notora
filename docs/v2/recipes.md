@@ -108,6 +108,16 @@ await service.soft_delete(session, user_id)
 repo.deleted_attribute = "removed_at"
 ```
 
+By default, `SoftDeleteRepository` excludes soft-deleted rows. If you need to
+include them, disable the filter:
+
+```python
+repo = SoftDeleteRepository(
+    User,
+    config=RepoConfig(apply_soft_delete_filter=False),
+)
+```
+
 ## Actor-aware updates
 
 ```python

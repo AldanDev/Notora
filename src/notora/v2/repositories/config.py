@@ -13,3 +13,4 @@ class RepoConfig[ModelType: GenericBaseModel]:
     default_ordering: Sequence[OrderSpec[ModelType]] | None = None
     fallback_sort_attribute: str | None = None
     pk_attribute: str | None = None
+    apply_soft_delete_filter: bool | None = None

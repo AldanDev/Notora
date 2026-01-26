@@ -128,6 +128,9 @@ async def test_repo_soft_delete(
     assert refreshed is not None
     assert refreshed.deleted_at is not None
 
+    listed = (await db_session.scalars(user_repo.list(limit=None))).all()
+    assert listed == []
+
 
 async def test_repo_create_or_skip(
     db_session: AsyncSession,

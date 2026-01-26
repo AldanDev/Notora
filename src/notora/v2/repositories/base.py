@@ -1,5 +1,5 @@
 from collections.abc import Iterable, Sequence
-from typing import Any, Protocol
+from typing import Any, Protocol, cast
 
 from sqlalchemy.orm import InstrumentedAttribute
 from sqlalchemy.sql.selectable import TypedReturnsRows
@@ -62,24 +62,35 @@ class SoftDeleteRepository[PKType, ModelType: GenericBaseModel](
 ):
     """Repository variant with soft-delete helpers."""
 
+    apply_soft_delete_filter: bool = True
+
+    def _soft_delete_filter(self) -> FilterSpec[ModelType]:
+        column = cast(InstrumentedAttribute[Any], getattr(self.model, self.deleted_attribute))
+        return column.is_(None)
+
     def __init__(  # noqa: C901
         self, model: type[ModelType], *, config: RepoConfig[ModelType] | None = None
     ) -> None:
         self.model = model
-        if config is None:
-            return
-        if config.default_limit is not None:
-            self.default_limit = config.default_limit
-        if config.default_options is not None:
-            self.default_options = config.default_options
-        if config.default_filters is not None:
-            self.default_filters = config.default_filters
-        if config.default_ordering is not None:
-            self.default_ordering = config.default_ordering
-        if config.fallback_sort_attribute is not None:
-            self.fallback_sort_attribute = config.fallback_sort_attribute
-        if config.pk_attribute is not None:
-            self.pk_attribute = config.pk_attribute
+        apply_soft_delete_filter = self.apply_soft_delete_filter
+        if config is not None:
+            if config.default_limit is not None:
+                self.default_limit = config.default_limit
+            if config.default_options is not None:
+                self.default_options = config.default_options
+            if config.default_filters is not None:
+                self.default_filters = config.default_filters
+            if config.default_ordering is not None:
+                self.default_ordering = config.default_ordering
+            if config.fallback_sort_attribute is not None:
+                self.fallback_sort_attribute = config.fallback_sort_attribute
+            if config.pk_attribute is not None:
+                self.pk_attribute = config.pk_attribute
+            if config.apply_soft_delete_filter is not None:
+                apply_soft_delete_filter = config.apply_soft_delete_filter
+        if apply_soft_delete_filter:
+            base_filters = tuple(self.default_filters)
+            self.default_filters = (*base_filters, self._soft_delete_filter())
 
 
 class RepositoryProtocol[PKType, ModelType: GenericBaseModel](Protocol):

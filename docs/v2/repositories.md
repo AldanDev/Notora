@@ -36,6 +36,7 @@ Write mixins:
 - `default_ordering`
 - `fallback_sort_attribute`
 - `pk_attribute`
+- `apply_soft_delete_filter` (only for `SoftDeleteRepository`)
 
 Example:
 
@@ -145,5 +146,19 @@ repo = Repository(
         default_limit=25,
         pk_attribute="id",
     ),
+)
+```
+
+### SoftDeleteRepository defaults
+
+`SoftDeleteRepository` automatically excludes soft-deleted rows by adding
+`deleted_at IS NULL` to `default_filters`.
+
+To include deleted rows, disable the filter:
+
+```python
+repo = SoftDeleteRepository(
+    User,
+    config=RepoConfig(apply_soft_delete_filter=False),
 )
 ```

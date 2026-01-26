@@ -14,7 +14,9 @@ v2 models are built from small mixins so you only include the fields you need.
 
 - `UpdatableMixin` -> `updated_at`
 - `UpdatedByMixin` -> `updated_by` (UUID, nullable)
+  - Optional FK via `updated_by_fk_target` / `updated_by_fk_kwargs`
 - `UpdatedByUserMixin` -> `updated_by_user` relationship to `User`
+  - Configures `updated_by` FK to `user.id`
   - Use only if a `User` model exists in your metadata.
 - `SoftDeletableMixin` -> `deleted_at`
 

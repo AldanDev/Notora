@@ -1,9 +1,9 @@
 import re
 import uuid
 from datetime import datetime
-from typing import Any
+from typing import Any, ClassVar
 
-from sqlalchemy import DateTime, MetaData, func
+from sqlalchemy import DateTime, ForeignKey, MetaData, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import (
     DeclarativeBase,
@@ -43,13 +43,25 @@ class UpdatableMixin:
 
 
 class UpdatedByMixin:
-    updated_by: Mapped[uuid.UUID | None] = mapped_column(
-        UUID,
-        nullable=True,
-    )
+    updated_by_fk_target: ClassVar[str | None] = None
+    updated_by_fk_kwargs: ClassVar[dict[str, Any]] = {}
+
+    @declared_attr
+    @classmethod
+    def updated_by(cls) -> Mapped[uuid.UUID | None]:
+        if cls.updated_by_fk_target:
+            return mapped_column(
+                UUID,
+                ForeignKey(cls.updated_by_fk_target, **cls.updated_by_fk_kwargs),
+                nullable=True,
+            )
+        return mapped_column(UUID, nullable=True)
 
 
 class UpdatedByUserMixin(UpdatedByMixin):
+    updated_by_fk_target: ClassVar[str | None] = 'user.id'
+    updated_by_fk_kwargs: ClassVar[dict[str, Any]] = {'use_alter': True}
+
     @declared_attr
     @classmethod
     def updated_by_user(cls) -> Mapped[Any | None]:

@@ -5,7 +5,8 @@ v2 models are built from small mixins so you only include the fields you need.
 ## Core base
 
 - `GenericBaseModel` adds:
-  - `id` (UUID, server default `gen_random_uuid()`)
+  - `id` (UUID by default, server default `gen_random_uuid()`)
+    - Override via `pk_type` / `pk_kwargs` (`primary_key=True` is applied by default)
   - `created_at` (via `CreatableMixin`)
   - `to_dict()` helper
 - `Base` uses a shared SQLAlchemy `MetaData` with naming conventions.
@@ -45,6 +46,7 @@ class User(AuditedBaseModel):
 - If you want `updated_by` but do not have a `User` model, use `UpdatedByMixin`
   instead of `UpdatedByUserMixin`.
 - Services can auto-fill `updated_by` when you pass `actor_id` (see `services.md`).
+- If you override `pk_type`, also adjust `pk_kwargs` to match your DB.
 
 ## Detailed examples
 
@@ -57,6 +59,23 @@ from notora.v2.models.base import GenericBaseModel, UpdatableMixin
 
 class Project(GenericBaseModel, UpdatableMixin):
     __tablename__ = "project"
+
+    name: Mapped[str] = mapped_column(unique=True)
+```
+
+### Custom primary key type
+
+```python
+from sqlalchemy import Integer
+from sqlalchemy.orm import Mapped, mapped_column
+from notora.v2.models.base import GenericBaseModel
+
+
+class IntPkModel(GenericBaseModel):
+    __tablename__ = "int_pk_model"
+
+    pk_type = Integer
+    pk_kwargs = {"autoincrement": True}
 
     name: Mapped[str] = mapped_column(unique=True)
 ```

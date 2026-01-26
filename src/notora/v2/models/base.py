@@ -3,8 +3,7 @@ import uuid
 from datetime import datetime
 from typing import Any, ClassVar
 
-from sqlalchemy import DateTime, ForeignKey, MetaData, func
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import DateTime, ForeignKey, MetaData, Uuid, func
 from sqlalchemy.orm import (
     DeclarativeBase,
     Mapped,
@@ -51,11 +50,11 @@ class UpdatedByMixin:
     def updated_by(cls) -> Mapped[uuid.UUID | None]:
         if cls.updated_by_fk_target:
             return mapped_column(
-                UUID,
+                Uuid,
                 ForeignKey(cls.updated_by_fk_target, **cls.updated_by_fk_kwargs),
                 nullable=True,
             )
-        return mapped_column(UUID, nullable=True)
+        return mapped_column(Uuid, nullable=True)
 
 
 class UpdatedByUserMixin(UpdatedByMixin):
@@ -78,11 +77,15 @@ class SoftDeletableMixin:
 
 class GenericBaseModel(Base, CreatableMixin):
     __abstract__ = True
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID,
-        primary_key=True,
-        server_default=func.gen_random_uuid(),
-    )
+    pk_type: ClassVar[Any] = Uuid
+    pk_kwargs: ClassVar[dict[str, Any]] = {
+        'server_default': func.gen_random_uuid(),
+    }
+
+    @declared_attr
+    @classmethod
+    def id(cls) -> Mapped[Any]:
+        return mapped_column(cls.pk_type, primary_key=True, **cls.pk_kwargs)
 
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__} id={self.id}>'

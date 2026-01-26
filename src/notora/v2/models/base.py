@@ -114,10 +114,5 @@ class SoftDeletableModel(GenericBaseModel, SoftDeletableMixin):
     __abstract__ = True
 
 
-class AuditedBaseModel(
-    GenericBaseModel,
-    UpdatableMixin,
-    UpdatedByUserMixin,
-    SoftDeletableMixin,
-):
+class AuditedBaseModel(BaseModel, UpdatedByUserMixin):
     __abstract__ = True

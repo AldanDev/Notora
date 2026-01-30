@@ -9,6 +9,7 @@ v2 models are built from small mixins so you only include the fields you need.
     - Override via `pk_type` / `pk_kwargs` (`primary_key=True` is applied by default)
   - `created_at` (via `CreatableMixin`)
   - `to_dict()` helper
+  - `__tablename__` defaults to snake_case of the class name (override by defining `__tablename__`)
 - `Base` uses a shared SQLAlchemy `MetaData` with naming conventions.
 
 ## Mixins

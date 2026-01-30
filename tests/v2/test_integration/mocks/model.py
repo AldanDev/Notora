@@ -13,7 +13,6 @@ from notora.v2.models.base import (
 
 
 class V2User(GenericBaseModel, UpdatableMixin, UpdatedByMixin, SoftDeletableMixin):
-    __tablename__ = 'v2_user'
     __table_args__ = (UniqueConstraint('email', name='v2_user_email_key'),)
 
     email: Mapped[str] = mapped_column(String, nullable=False)
@@ -22,13 +21,10 @@ class V2User(GenericBaseModel, UpdatableMixin, UpdatedByMixin, SoftDeletableMixi
 
 
 class V2Role(GenericBaseModel):
-    __tablename__ = 'v2_role'
-
     name: Mapped[str] = mapped_column(String, nullable=False)
 
 
 class V2UserRole(GenericBaseModel):
-    __tablename__ = 'v2_user_role'
     __table_args__ = (UniqueConstraint('user_id', 'role_id', name='v2_user_role_unique'),)
 
     user_id: Mapped[UUID] = mapped_column(
@@ -44,8 +40,6 @@ class V2UserRole(GenericBaseModel):
 
 
 class V2Profile(GenericBaseModel):
-    __tablename__ = 'v2_profile'
-
     user_id: Mapped[UUID] = mapped_column(
         PGUUID,
         ForeignKey('v2_user.id'),

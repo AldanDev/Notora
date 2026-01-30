@@ -9,8 +9,6 @@ from notora.v2.repositories.types import DEFAULT_LIMIT
 
 
 class Widget(GenericBaseModel):
-    __tablename__ = 'widget_query'
-
     name: Mapped[str] = mapped_column(String)
     count: Mapped[int] = mapped_column(Integer)
 

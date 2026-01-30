@@ -36,8 +36,6 @@ from notora.v2.services import RepositoryService, ServiceConfig
 
 
 class User(AuditedBaseModel):
-    __tablename__ = "user"
-
     # SQLAlchemy columns
     email: Mapped[str] = mapped_column(unique=True)
     name: Mapped[str]

@@ -36,8 +36,6 @@ from sqlalchemy.orm import Mapped, mapped_column
 from notora.v2.models.base import AuditedBaseModel
 
 class User(AuditedBaseModel):
-    __tablename__ = "user"
-
     email: Mapped[str] = mapped_column(unique=True)
 ```
 
@@ -58,8 +56,6 @@ from notora.v2.models.base import GenericBaseModel, UpdatableMixin
 
 
 class Project(GenericBaseModel, UpdatableMixin):
-    __tablename__ = "project"
-
     name: Mapped[str] = mapped_column(unique=True)
 ```
 
@@ -72,8 +68,6 @@ from notora.v2.models.base import GenericBaseModel
 
 
 class IntPkModel(GenericBaseModel):
-    __tablename__ = "int_pk_model"
-
     pk_type = Integer
     pk_kwargs = {"autoincrement": True}
 
@@ -88,8 +82,6 @@ from notora.v2.models.base import GenericBaseModel, UpdatableMixin, UpdatedByMix
 
 
 class AuditEvent(GenericBaseModel, UpdatableMixin, UpdatedByMixin):
-    __tablename__ = "audit_event"
-
     # updated_by is just a UUID column; no relationship needed
     event: Mapped[str]
 ```
@@ -102,14 +94,10 @@ from notora.v2.models.base import UpdatedByUserModel, GenericBaseModel
 
 
 class User(GenericBaseModel):
-    __tablename__ = "user"
-
     email: Mapped[str] = mapped_column(unique=True)
 
 
 class Task(UpdatedByUserModel):
-    __tablename__ = "task"
-
     title: Mapped[str]
     # updated_by_user relationship is provided by UpdatedByUserModel
 ```
@@ -122,8 +110,6 @@ from notora.v2.models.base import AuditedBaseModel
 
 
 class Invoice(AuditedBaseModel):
-    __tablename__ = "invoice"
-
     number: Mapped[str]
     total: Mapped[int]
 ```

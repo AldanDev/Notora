@@ -8,8 +8,6 @@ from notora.v2.repositories.params import QueryParams
 
 
 class Widget(GenericBaseModel):
-    __tablename__ = 'widget'
-
     name: Mapped[str] = mapped_column(String)
 
 

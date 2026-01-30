@@ -82,6 +82,10 @@ class GenericBaseModel(Base, CreatableMixin):
         'server_default': func.gen_random_uuid(),
     }
 
+    @declared_attr  # type: ignore[arg-type]
+    def __tablename__(cls) -> str:  # noqa: N805
+        return re.compile(r'(?<!^)(?=[A-Z])').sub('_', cls.__name__).lower()
+
     @declared_attr
     @classmethod
     def id(cls) -> Mapped[Any]:
@@ -96,10 +100,6 @@ class GenericBaseModel(Base, CreatableMixin):
 
 class BaseModel(GenericBaseModel, UpdatableMixin, SoftDeletableMixin):
     __abstract__ = True
-
-    @declared_attr  # type: ignore[arg-type]
-    def __tablename__(cls) -> str:  # noqa: N805
-        return re.compile(r'(?<!^)(?=[A-Z])').sub('_', cls.__name__).lower()
 
 
 class UpdatableModel(GenericBaseModel, UpdatableMixin):

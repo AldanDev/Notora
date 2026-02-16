@@ -1,21 +1,42 @@
 import typing
 from collections.abc import Sequence
-from datetime import datetime
+from datetime import UTC, datetime
 from math import ceil
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, PlainSerializer
+from pydantic import AfterValidator, BaseModel, ConfigDict, PlainSerializer
 
 from notora.types import AnyIPAddress
 from notora.v1.enums.base import OrderByDirections
 
 
+def normalize_datetime_to_utc(dec_value: datetime) -> datetime:
+    if dec_value.tzinfo is None or dec_value.utcoffset() is None:
+        return dec_value.replace(tzinfo=UTC)
+    return dec_value.astimezone(UTC)
+
+
+def utc_datetime_encoder(dec_value: datetime) -> str:
+    return normalize_datetime_to_utc(dec_value).isoformat().replace('+00:00', 'Z')
+
+
 def datetime_encoder(dec_value: datetime) -> float:
-    return dec_value.timestamp()
+    return normalize_datetime_to_utc(dec_value).timestamp()
 
 
-timestamp = Annotated[datetime, PlainSerializer(datetime_encoder, return_type=float)]
+utc_datetime = Annotated[
+    datetime,
+    AfterValidator(normalize_datetime_to_utc),
+    PlainSerializer(utc_datetime_encoder, return_type=str, when_used='json'),
+]
+
+
+timestamp = Annotated[
+    datetime,
+    AfterValidator(normalize_datetime_to_utc),
+    PlainSerializer(datetime_encoder, return_type=float),
+]
 
 
 class BaseResponseSchema(BaseModel):
@@ -27,22 +48,12 @@ class BaseRequestSchema(BaseModel):
 
 
 class CreateUpdateMeta(BaseModel):
-    created_at: datetime
-    updated_at: datetime
+    created_at: utc_datetime
+    updated_at: utc_datetime
 
 
 class AdminMeta(CreateUpdateMeta):
-    deleted_at: datetime | None = None
-
-
-class AdminResponseSchema(BaseResponseSchema):
-    id: UUID
-    full_name: str | None = None
-    unovay_name: str | None = None
-
-
-class PersonalizedAdminMeta(CreateUpdateMeta):
-    updated_by_user: AdminResponseSchema | None = None
+    deleted_at: utc_datetime | None = None
 
 
 class SetUpdatedBySchema(BaseRequestSchema):
@@ -105,8 +116,8 @@ class BaseTokenSchema(BaseResponseSchema):
     sub: UUID
     iss: str
     nbf: timestamp
-    exp: datetime
-    iat: datetime
+    exp: utc_datetime
+    iat: utc_datetime
 
     @property
     def id(self) -> UUID:

@@ -46,6 +46,41 @@ class CreateServiceMixin[
             await self.sync_m2m_relations(session, self._extract_pk(entity), relation_payload)
         return entity
 
+    async def bulk_create_raw(
+        self,
+        session: AsyncSession,
+        data: Sequence[PydanticModel | dict[str, Any]],
+        *,
+        actor_id: Any | None = None,
+        options: Iterable[OptionSpec[ModelType]] | None = None,
+    ) -> list[ModelType]:
+        payloads = [
+            self._apply_updated_by(
+                self._dump_payload(item, exclude_unset=False),
+                actor_id,
+            )
+            for item in data
+        ]
+        query = self.repo.bulk_create(payloads, options=options)
+        return await self.execute_for_many(session, query)
+
+    async def bulk_create(
+        self,
+        session: AsyncSession,
+        data: Sequence[PydanticModel | dict[str, Any]],
+        *,
+        actor_id: Any | None = None,
+        options: Iterable[OptionSpec[ModelType]] | None = None,
+        schema: type[ListSchema] | None = None,
+    ) -> list[ListSchema]:
+        entities = await self.bulk_create_raw(
+            session,
+            data,
+            actor_id=actor_id,
+            options=options,
+        )
+        return self.serialize_many(entities, schema=schema)
+
     async def create(
         self,
         session: AsyncSession,

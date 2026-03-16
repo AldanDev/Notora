@@ -58,6 +58,34 @@ class CreateServiceMixin[
         options: Iterable[OptionSpec[ModelType]] | None = None,
         schema: type[SchemaT],
     ) -> SchemaT: ...
+    async def bulk_create_raw(
+        self,
+        session: AsyncSession,
+        data: Sequence[PydanticModel | dict[str, Any]],
+        *,
+        actor_id: Any | None = None,
+        options: Iterable[OptionSpec[ModelType]] | None = None,
+    ) -> list[ModelType]: ...
+    @overload
+    async def bulk_create(
+        self,
+        session: AsyncSession,
+        data: Sequence[PydanticModel | dict[str, Any]],
+        *,
+        actor_id: Any | None = None,
+        options: Iterable[OptionSpec[ModelType]] | None = None,
+        schema: None = ...,
+    ) -> list[ListSchema]: ...
+    @overload
+    async def bulk_create[SchemaT: BaseResponseSchema](
+        self,
+        session: AsyncSession,
+        data: Sequence[PydanticModel | dict[str, Any]],
+        *,
+        actor_id: Any | None = None,
+        options: Iterable[OptionSpec[ModelType]] | None = None,
+        schema: type[SchemaT],
+    ) -> list[SchemaT]: ...
 
 class CreateOrSkipServiceMixin[
     PKType,

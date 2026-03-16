@@ -79,6 +79,14 @@ class SessionExecutorMixin[PKType, ModelType: GenericBaseModel]:
         result = await self.execute(session, statement)
         return cast(ModelType | None, result.unique().scalar_one_or_none())
 
+    async def execute_for_many(
+        self,
+        session: AsyncSession,
+        statement: TypedReturnsRows[tuple[ModelType]],
+    ) -> list[ModelType]:
+        result = await self.execute(session, statement)
+        return list(cast('ScalarResult[ModelType]', result.unique().scalars()).all())
+
     def _translate_integrity_error(self, err: exc.IntegrityError) -> Exception:
         if match := self._fk_constraint_pattern.match(err.args[0]):
             fk_name = match.group('fk_name')

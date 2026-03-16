@@ -3,7 +3,7 @@ from uuid import uuid4
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from notora.v2.exceptions.common import NotFoundError
+from notora.v2.exceptions.common import AlreadyExistsError, NotFoundError
 from notora.v2.repositories.params import PaginationParams, QueryParams
 from notora.v2.schemas.base import PaginatedResponseSchema
 from tests.v2.test_integration.mocks.model import V2User
@@ -182,3 +182,68 @@ async def test_service_retrieve_create_or_skip_upsert_and_delete(
 
     with pytest.raises(NotFoundError):
         await user_service.retrieve(db_session, created.id)
+
+
+async def test_service_bulk_create(
+    db_session: AsyncSession,
+    user_service: V2UserService,
+) -> None:
+    payloads = [
+        _create_user_payload('bulk1@ex.com', 'Bulk1'),
+        _create_user_payload('bulk2@ex.com', 'Bulk2'),
+        _create_user_payload('bulk3@ex.com', 'Bulk3'),
+    ]
+    created = await user_service.bulk_create(db_session, payloads)
+    await db_session.commit()
+
+    assert len(created) == len(payloads)
+    assert all(isinstance(item, V2UserResponseSchema) for item in created)
+    assert {item.email for item in created} == {'bulk1@ex.com', 'bulk2@ex.com', 'bulk3@ex.com'}
+
+
+async def test_service_bulk_create_raw(
+    db_session: AsyncSession,
+    user_service: V2UserService,
+) -> None:
+    payloads = [
+        _create_user_payload('raw1@ex.com', 'Raw1'),
+        _create_user_payload('raw2@ex.com', 'Raw2'),
+    ]
+    created = await user_service.bulk_create_raw(db_session, payloads)
+    await db_session.commit()
+
+    assert len(created) == len(payloads)
+    assert all(isinstance(item, V2User) for item in created)
+
+
+async def test_service_bulk_create_with_actor_id(
+    db_session: AsyncSession,
+    user_service: V2UserService,
+) -> None:
+    actor_id = uuid4()
+    payloads = [
+        _create_user_payload('actor1@ex.com', 'Actor1'),
+        _create_user_payload('actor2@ex.com', 'Actor2'),
+    ]
+    created = await user_service.bulk_create(db_session, payloads, actor_id=actor_id)
+    await db_session.commit()
+
+    assert len(created) == len(payloads)
+    assert all(item.updated_by == actor_id for item in created)
+
+
+async def test_service_bulk_create_duplicate_raises(
+    db_session: AsyncSession,
+    user_service: V2UserService,
+) -> None:
+    payload = _create_user_payload('dup@ex.com', 'Original')
+    await user_service.create(db_session, payload)
+    await db_session.commit()
+
+    with pytest.raises(AlreadyExistsError):
+        await user_service.bulk_create(
+            db_session,
+            [
+                _create_user_payload('dup@ex.com', 'Duplicate'),
+            ],
+        )

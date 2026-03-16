@@ -149,6 +149,13 @@ class RepositoryProtocol[PKType, ModelType: GenericBaseModel](Protocol):
         options: Iterable[OptionSpec[ModelType]] | None = None,
     ) -> TypedReturnsRows[tuple[ModelType]]: ...
 
+    def bulk_create(
+        self,
+        payload: Sequence[dict[str, Any]],
+        *,
+        options: Iterable[OptionSpec[ModelType]] | None = None,
+    ) -> TypedReturnsRows[tuple[ModelType]]: ...
+
     def create_or_skip(
         self,
         payload: dict[str, Any],

@@ -85,8 +85,8 @@ If `actor_id` is provided and the model does not have the field, a
 
 Each operation has a raw and serialized variant:
 
-- `create_raw`, `update_raw`, `upsert_raw` -> return SQLAlchemy model
-- `create`, `update`, `upsert` -> always serialize to schema
+- `create_raw`, `bulk_create_raw`, `update_raw`, `upsert_raw` -> return SQLAlchemy model
+- `create`, `bulk_create`, `update`, `upsert` -> always serialize to schema
 
 ## Pagination
 
@@ -116,6 +116,27 @@ user_schema = await service.create(session, payload)
 # Use the raw variants to work with SQLAlchemy models directly.
 user_model = await service.create_raw(session, payload)
 ```
+
+### Bulk create
+
+```python
+payloads = [
+    UserCreateSchema(email="a@b.com", name="Alice"),
+    UserCreateSchema(email="c@d.com", name="Charlie"),
+]
+
+# Serialized — returns list[ListSchema]
+users = await service.bulk_create(session, payloads)
+
+# Raw — returns list[ModelType]
+models = await service.bulk_create_raw(session, payloads)
+
+# With actor tracking
+users = await service.bulk_create(session, payloads, actor_id=current_user_id)
+```
+
+> M2M relations are not supported in bulk create. Use single `create` calls
+> when you need M2M sync.
 
 ### Actor-aware update (updated_by)
 

@@ -155,8 +155,11 @@ class SoftDeleteMixin[PKType, ModelType: GenericBaseModel](UpdateMixin[PKType, M
         *,
         filters: Iterable[FilterSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
+        additional_payload: dict[str, Any] | None = None,
     ) -> TypedReturnsRows[tuple[ModelType]]:
-        payload = {self.deleted_attribute: func.now()}
+        payload: dict[str, Any] = {self.deleted_attribute: func.now()}
+        if additional_payload:
+            payload.update(additional_payload)
         return super().update_by(payload, filters=filters, options=options)
 
     def soft_delete(
@@ -164,6 +167,9 @@ class SoftDeleteMixin[PKType, ModelType: GenericBaseModel](UpdateMixin[PKType, M
         pk: PKType,
         *,
         options: Iterable[OptionSpec[ModelType]] | None = None,
+        additional_payload: dict[str, Any] | None = None,
     ) -> TypedReturnsRows[tuple[ModelType]]:
         filters = (cast(FilterClause, self.pk_column == pk),)
-        return self.soft_delete_by(filters=filters, options=options)
+        return self.soft_delete_by(
+            filters=filters, options=options, additional_payload=additional_payload,
+        )

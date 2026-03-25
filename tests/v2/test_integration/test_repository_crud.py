@@ -180,3 +180,26 @@ async def test_repo_upsert_updates_existing(
     assert refreshed is not None
     await db_session.refresh(refreshed)
     assert refreshed.name == 'After'
+
+
+async def test_repo_soft_delete_with_additional_payload(
+    db_session: AsyncSession,
+    user_repo: V2UserRepo,
+) -> None:
+    actor_id = uuid4()
+    user = await _create_user(
+        db_session,
+        user_repo,
+        email='soft-payload@ex.com',
+        name='SoftPayload',
+    )
+
+    await db_session.execute(
+        user_repo.soft_delete(user.id, additional_payload={'updated_by': actor_id})
+    )
+    await db_session.commit()
+
+    refreshed = await db_session.get(V2User, user.id)
+    assert refreshed is not None
+    assert refreshed.deleted_at is not None
+    assert refreshed.updated_by == actor_id

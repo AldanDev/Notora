@@ -216,6 +216,7 @@ class SoftDeleteRepositoryProtocol[PKType, ModelType: GenericBaseModel](
         pk: PKType,
         *,
         options: Iterable[OptionSpec[ModelType]] | None = None,
+        additional_payload: dict[str, Any] | None = None,
     ) -> TypedReturnsRows[tuple[ModelType]]: ...
 
     def soft_delete_by(
@@ -223,4 +224,5 @@ class SoftDeleteRepositoryProtocol[PKType, ModelType: GenericBaseModel](
         *,
         filters: Iterable[FilterSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
+        additional_payload: dict[str, Any] | None = None,
     ) -> TypedReturnsRows[tuple[ModelType]]: ...

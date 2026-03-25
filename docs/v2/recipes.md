@@ -104,6 +104,9 @@ service = SoftDeleteRepositoryService(repo)
 
 await service.soft_delete(session, user_id)
 
+# Track who performed the deletion (requires UpdatedByMixin on the model).
+await service.soft_delete(session, user_id, actor_id=current_user_id)
+
 # Customize column name if your model differs.
 repo.deleted_attribute = "removed_at"
 ```
@@ -122,7 +125,9 @@ repo = SoftDeleteRepository(
 
 ```python
 # Model should include UpdatedByMixin / UpdatedByUserMixin to store actor id.
+await service.create(session, data, actor_id=current_user_id)
 await service.update(session, user_id, data, actor_id=current_user_id)
+await service.soft_delete(session, user_id, actor_id=current_user_id)
 ```
 
 If your field is not named `updated_by`, override `updated_by_attribute` on the

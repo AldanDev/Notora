@@ -171,5 +171,7 @@ class SoftDeleteMixin[PKType, ModelType: GenericBaseModel](UpdateMixin[PKType, M
     ) -> TypedReturnsRows[tuple[ModelType]]:
         filters = (cast(FilterClause, self.pk_column == pk),)
         return self.soft_delete_by(
-            filters=filters, options=options, additional_payload=additional_payload,
+            filters=filters,
+            options=options,
+            additional_payload=additional_payload,
         )

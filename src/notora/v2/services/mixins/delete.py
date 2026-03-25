@@ -56,6 +56,7 @@ class SoftDeleteServiceMixin[PKType, ModelType: GenericBaseModel](
         await self.execute(
             session,
             self.repo.soft_delete_by(
-                filters=filters, additional_payload=additional_payload,
+                filters=filters,
+                additional_payload=additional_payload,
             ),
         )

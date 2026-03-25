@@ -5,7 +5,9 @@ from notora.v2.repositories.base import RepositoryProtocol
 
 
 class _UpdatedByProvider[PKType, ModelType: GenericBaseModel](Protocol):
-    repo: RepositoryProtocol[PKType, ModelType]
+    @property
+    def repo(self) -> RepositoryProtocol[PKType, ModelType]: ...
+
     updated_by_attribute: str
 
 

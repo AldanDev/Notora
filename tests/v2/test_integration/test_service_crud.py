@@ -232,6 +232,68 @@ async def test_service_bulk_create_with_actor_id(
     assert all(item.updated_by == actor_id for item in created)
 
 
+async def test_service_soft_delete_with_actor_id(
+    db_session: AsyncSession,
+    user_service: V2UserService,
+) -> None:
+    actor_id = uuid4()
+    payload = _create_user_payload('soft-actor@ex.com', 'SoftActor')
+
+    created = await user_service.create(db_session, payload)
+    await db_session.commit()
+
+    await user_service.soft_delete(db_session, created.id, actor_id=actor_id)
+    await db_session.commit()
+
+    refreshed = await db_session.get(V2User, created.id)
+    assert refreshed is not None
+    assert refreshed.deleted_at is not None
+    assert refreshed.updated_by == actor_id
+
+
+async def test_service_soft_delete_by_with_actor_id(
+    db_session: AsyncSession,
+    user_service: V2UserService,
+) -> None:
+    actor_id = uuid4()
+    payload = _create_user_payload('soft-by-actor@ex.com', 'SoftByActor')
+
+    created = await user_service.create(db_session, payload)
+    await db_session.commit()
+
+    await user_service.soft_delete_by(
+        db_session,
+        filters=[V2User.id == created.id],
+        actor_id=actor_id,
+    )
+    await db_session.commit()
+
+    refreshed = await db_session.get(V2User, created.id)
+    assert refreshed is not None
+    assert refreshed.deleted_at is not None
+    assert refreshed.updated_by == actor_id
+
+
+async def test_service_soft_delete_without_actor_preserves_updated_by(
+    db_session: AsyncSession,
+    user_service: V2UserService,
+) -> None:
+    original_actor = uuid4()
+    payload = _create_user_payload('soft-preserve@ex.com', 'SoftPreserve')
+
+    created = await user_service.create(db_session, payload, actor_id=original_actor)
+    await db_session.commit()
+    assert created.updated_by == original_actor
+
+    await user_service.soft_delete(db_session, created.id)
+    await db_session.commit()
+
+    refreshed = await db_session.get(V2User, created.id)
+    assert refreshed is not None
+    assert refreshed.deleted_at is not None
+    assert refreshed.updated_by == original_actor
+
+
 async def test_service_bulk_create_duplicate_raises(
     db_session: AsyncSession,
     user_service: V2UserService,

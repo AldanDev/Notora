@@ -40,7 +40,7 @@ class SoftDeleteServiceMixin[PKType, ModelType: GenericBaseModel](
         actor_id: Any | None = None,
     ) -> None:
         additional_payload = self._apply_updated_by({}, actor_id) or None
-        await self.execute(
+        await self.execute_for_one(
             session,
             self.repo.soft_delete(pk, additional_payload=additional_payload),
         )

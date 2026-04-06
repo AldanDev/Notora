@@ -12,6 +12,8 @@ from notora.v2.services.mixins.executor import SessionExecutorMixin
 from notora.v2.services.mixins.serializer import SerializerProtocol
 from notora.v2.services.mixins.updated_by import UpdatedByServiceMixin
 
+__all__ = ['DeleteServiceMixin', 'SoftDeleteServiceMixin']
+
 
 class DeleteServiceMixin[
     PKType,

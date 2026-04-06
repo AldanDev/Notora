@@ -25,7 +25,7 @@ class RepositoryService[
     UpsertServiceMixin[PKType, ModelType, DetailSchema, ListSchema],
     UpdateServiceMixin[PKType, ModelType, DetailSchema, ListSchema],
     UpdateByFilterServiceMixin[PKType, ModelType, DetailSchema, ListSchema],
-    DeleteServiceMixin[PKType, ModelType],
+    DeleteServiceMixin[PKType, ModelType, DetailSchema, ListSchema],
 ):
     """Turnkey async service that glues repository access and serialization together."""
 
@@ -51,7 +51,7 @@ class SoftDeleteRepositoryService[
     ListSchema: BaseResponseSchema = DetailSchema,
 ](
     RepositoryService[PKType, ModelType, DetailSchema, ListSchema],
-    SoftDeleteServiceMixin[PKType, ModelType],
+    SoftDeleteServiceMixin[PKType, ModelType, DetailSchema, ListSchema],
 ):
     """Repository service variant that exposes soft-delete helpers."""
 

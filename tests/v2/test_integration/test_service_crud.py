@@ -64,8 +64,11 @@ async def test_service_update_by_and_soft_delete(
     assert isinstance(updated, V2UserResponseSchema)
     assert updated.name == 'After'
 
-    await user_service.soft_delete(db_session, created.id)
+    deleted = await user_service.soft_delete(db_session, created.id)
     await db_session.commit()
+
+    assert isinstance(deleted, V2UserResponseSchema)
+    assert deleted.id == created.id
 
     refreshed = await db_session.get(V2User, created.id)
     assert refreshed is not None
@@ -176,8 +179,11 @@ async def test_service_retrieve_create_or_skip_upsert_and_delete(
     assert refreshed is not None
     assert refreshed.name == 'Upserted'
 
-    await user_service.delete(db_session, created.id)
+    deleted = await user_service.delete(db_session, created.id)
     await db_session.commit()
+
+    assert isinstance(deleted, V2UserResponseSchema)
+    assert deleted.id == created.id
     assert await db_session.get(V2User, created.id) is None
 
     with pytest.raises(NotFoundError):
@@ -242,8 +248,11 @@ async def test_service_soft_delete_with_actor_id(
     created = await user_service.create(db_session, payload)
     await db_session.commit()
 
-    await user_service.soft_delete(db_session, created.id, actor_id=actor_id)
+    deleted = await user_service.soft_delete(db_session, created.id, actor_id=actor_id)
     await db_session.commit()
+
+    assert isinstance(deleted, V2UserResponseSchema)
+    assert deleted.updated_by == actor_id
 
     refreshed = await db_session.get(V2User, created.id)
     assert refreshed is not None
@@ -261,12 +270,16 @@ async def test_service_soft_delete_by_with_actor_id(
     created = await user_service.create(db_session, payload)
     await db_session.commit()
 
-    await user_service.soft_delete_by(
+    deleted = await user_service.soft_delete_by(
         db_session,
         filters=[V2User.id == created.id],
         actor_id=actor_id,
     )
     await db_session.commit()
+
+    assert len(deleted) == 1
+    assert isinstance(deleted[0], V2UserResponseSchema)
+    assert deleted[0].updated_by == actor_id
 
     refreshed = await db_session.get(V2User, created.id)
     assert refreshed is not None
@@ -285,8 +298,11 @@ async def test_service_soft_delete_without_actor_preserves_updated_by(
     await db_session.commit()
     assert created.updated_by == original_actor
 
-    await user_service.soft_delete(db_session, created.id)
+    deleted = await user_service.soft_delete(db_session, created.id)
     await db_session.commit()
+
+    assert isinstance(deleted, V2UserResponseSchema)
+    assert deleted.updated_by == original_actor
 
     refreshed = await db_session.get(V2User, created.id)
     assert refreshed is not None
@@ -309,3 +325,93 @@ async def test_service_bulk_create_duplicate_raises(
                 _create_user_payload('dup@ex.com', 'Duplicate'),
             ],
         )
+
+
+async def test_service_soft_delete_raw(
+    db_session: AsyncSession,
+    user_service: V2UserService,
+) -> None:
+    payload = _create_user_payload('soft-raw@ex.com', 'SoftRaw')
+    created = await user_service.create(db_session, payload)
+    await db_session.commit()
+
+    deleted = await user_service.soft_delete_raw(db_session, created.id)
+    await db_session.commit()
+
+    assert isinstance(deleted, V2User)
+    assert deleted.id == created.id
+    assert deleted.deleted_at is not None
+
+
+async def test_service_delete_raw(
+    db_session: AsyncSession,
+    user_service: V2UserService,
+) -> None:
+    payload = _create_user_payload('del-raw@ex.com', 'DelRaw')
+    created = await user_service.create(db_session, payload)
+    await db_session.commit()
+
+    deleted = await user_service.delete_raw(db_session, created.id)
+    await db_session.commit()
+
+    assert isinstance(deleted, V2User)
+    assert deleted.id == created.id
+
+    await db_session.invalidate()
+    assert await db_session.get(V2User, created.id) is None
+
+
+async def test_service_soft_delete_by_returns_list(
+    db_session: AsyncSession,
+    user_service: V2UserService,
+) -> None:
+    payloads = [
+        _create_user_payload('sdel-by1@ex.com', 'SDelBy1'),
+        _create_user_payload('sdel-by2@ex.com', 'SDelBy2'),
+    ]
+    for p in payloads:
+        await user_service.create(db_session, p)
+    await db_session.commit()
+
+    deleted = await user_service.soft_delete_by(
+        db_session,
+        filters=[V2User.email.in_(['sdel-by1@ex.com', 'sdel-by2@ex.com'])],
+    )
+    await db_session.commit()
+
+    assert len(deleted) == len(payloads)
+    assert all(isinstance(d, V2UserResponseSchema) for d in deleted)
+    assert {d.email for d in deleted} == {'sdel-by1@ex.com', 'sdel-by2@ex.com'}
+
+
+async def test_service_soft_delete_by_empty_result(
+    db_session: AsyncSession,
+    user_service: V2UserService,
+) -> None:
+    deleted = await user_service.soft_delete_by(
+        db_session,
+        filters=[V2User.email == 'nonexistent@ex.com'],
+    )
+    assert deleted == []
+
+
+async def test_service_delete_by_returns_list(
+    db_session: AsyncSession,
+    user_service: V2UserService,
+) -> None:
+    payloads = [
+        _create_user_payload('del-by1@ex.com', 'DelBy1'),
+        _create_user_payload('del-by2@ex.com', 'DelBy2'),
+    ]
+    for p in payloads:
+        await user_service.create(db_session, p)
+    await db_session.commit()
+
+    deleted = await user_service.delete_by(
+        db_session,
+        filters=[V2User.email.in_(['del-by1@ex.com', 'del-by2@ex.com'])],
+    )
+    await db_session.commit()
+
+    assert len(deleted) == len(payloads)
+    assert all(isinstance(d, V2UserResponseSchema) for d in deleted)

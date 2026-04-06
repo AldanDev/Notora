@@ -102,10 +102,25 @@ entity = await service.upsert(
 repo = SoftDeleteRepository(User)
 service = SoftDeleteRepositoryService(repo)
 
-await service.soft_delete(session, user_id)
+# Returns the deleted entity as a schema.
+deleted = await service.soft_delete(session, user_id)
 
 # Track who performed the deletion (requires UpdatedByMixin on the model).
-await service.soft_delete(session, user_id, actor_id=current_user_id)
+deleted = await service.soft_delete(session, user_id, actor_id=current_user_id)
+
+# Bulk soft delete by filters — returns a list of deleted schemas.
+deleted_list = await service.soft_delete_by(
+    session,
+    filters=[User.is_active == False],
+)
+
+# Raw variants return ORM models instead of schemas.
+entity = await service.soft_delete_raw(session, user_id)
+entities = await service.soft_delete_by_raw(session, filters=[User.is_active == False])
+
+# Hard delete also returns entities.
+deleted = await service.delete(session, user_id)
+deleted_list = await service.delete_by(session, filters=[User.is_active == False])
 
 # Customize column name if your model differs.
 repo.deleted_attribute = "removed_at"
@@ -125,9 +140,9 @@ repo = SoftDeleteRepository(
 
 ```python
 # Model should include UpdatedByMixin / UpdatedByUserMixin to store actor id.
-await service.create(session, data, actor_id=current_user_id)
-await service.update(session, user_id, data, actor_id=current_user_id)
-await service.soft_delete(session, user_id, actor_id=current_user_id)
+created = await service.create(session, data, actor_id=current_user_id)
+updated = await service.update(session, user_id, data, actor_id=current_user_id)
+deleted = await service.soft_delete(session, user_id, actor_id=current_user_id)
 ```
 
 If your field is not named `updated_by`, override `updated_by_attribute` on the

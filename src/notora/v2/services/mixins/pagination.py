@@ -38,6 +38,7 @@ class PaginationServiceMixin[
         apply_default_filters: bool = True,
         schema: type[ListSchema] | None = None,
     ) -> 'PaginatedResponseSchema[ListSchema]':
+        """Paginate with meta.total coherent to len(page.data); count_query honors apply_default_filters."""
         data = await self.list_raw(
             session,
             filters=filters,
@@ -90,7 +91,7 @@ class PaginationServiceMixin[
             schema=schema,
         )
 
-    async def paginate_rows_from_queries[RowT](
+    async def paginate_rows_from_queries[RowT: BaseResponseSchema](
         self,
         session: AsyncSession,
         *,

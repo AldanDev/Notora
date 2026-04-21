@@ -3,9 +3,13 @@
 from notora.v2.fastapi import make_list_params_dependency
 from notora.v2.repositories import (
     FilterClause,
+    FilterFactory,
     FilterField,
     FilterSpec,
+    OptionFactory,
+    OptionSpec,
     OrderClause,
+    OrderFactory,
     OrderSpec,
     PaginationParams,
     QueryInput,
@@ -17,6 +21,7 @@ from notora.v2.repositories import (
     apply_filter_operator,
     build_query_params,
     make_query_params_dependency,
+    resolve_to_column,
 )
 from notora.v2.schemas import (
     BaseRequestSchema,
@@ -38,9 +43,13 @@ __all__ = [
     'BaseRequestSchema',
     'BaseResponseSchema',
     'FilterClause',
+    'FilterFactory',
     'FilterField',
     'FilterSpec',
+    'OptionFactory',
+    'OptionSpec',
     'OrderClause',
+    'OrderFactory',
     'OrderSpec',
     'PaginatedResponseSchema',
     'PaginationMetaSchema',
@@ -62,4 +71,5 @@ __all__ = [
     'build_query_params',
     'make_list_params_dependency',
     'make_query_params_dependency',
+    'resolve_to_column',
 ]

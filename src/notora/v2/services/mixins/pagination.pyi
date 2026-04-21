@@ -91,7 +91,7 @@ class PaginationServiceMixin[
         *,
         schema: type[SchemaT],
     ) -> PaginatedResponseSchema[SchemaT]: ...
-    async def paginate_rows_from_queries[RowT](
+    async def paginate_rows_from_queries[RowT: BaseResponseSchema](
         self,
         session: AsyncSession,
         *,

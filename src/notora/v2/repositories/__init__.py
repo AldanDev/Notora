@@ -34,6 +34,7 @@ from notora.v2.repositories.query_dsl import (
     apply_filter_operator,
     build_query_params,
     make_query_params_dependency,
+    resolve_to_column,
 )
 from notora.v2.repositories.types import (
     DEFAULT_LIMIT,
@@ -93,4 +94,5 @@ __all__ = [
     'build_query_params',
     'build_repository',
     'make_query_params_dependency',
+    'resolve_to_column',
 ]

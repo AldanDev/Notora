@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from typing import Any, ClassVar, Literal
 
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy.orm import InstrumentedAttribute
 from sqlalchemy.sql import ColumnElement
 
 from notora.v2.models.base import GenericBaseModel
@@ -12,6 +11,7 @@ from notora.v2.repositories.query_dsl import (
     FilterResolver,
     SortResolver,
     apply_filter_operator,
+    resolve_to_column,
 )
 from notora.v2.repositories.types import FilterSpec, OrderSpec
 
@@ -66,17 +66,8 @@ class PydanticOrderBySchema[ModelType: GenericBaseModel](BaseModel):
         if spec_def is None:
             msg = f'Unsupported sort field "{self.order_by}".'
             raise ValueError(msg)
-        column = _resolve_to_column(spec_def.resolver, model)
+        column = resolve_to_column(spec_def.resolver, model)
         return [column.desc() if self.direction == 'desc' else column.asc()]
-
-
-def _resolve_to_column[ModelType: GenericBaseModel](
-    resolver: FilterResolver[ModelType] | SortResolver[ModelType],
-    model: type[ModelType],
-) -> ColumnElement[Any] | InstrumentedAttribute[Any]:
-    if callable(resolver):
-        return resolver(model)
-    return resolver
 
 
 def _build_one_filter_spec[ModelType: GenericBaseModel](
@@ -90,5 +81,5 @@ def _build_one_filter_spec[ModelType: GenericBaseModel](
     if spec_def.resolver is None:
         msg = f'Filter field "{field_name}" requires resolver or predicate.'
         raise ValueError(msg)
-    column = _resolve_to_column(spec_def.resolver, model)
+    column = resolve_to_column(spec_def.resolver, model)
     return apply_filter_operator(column, spec_def.operator, value)

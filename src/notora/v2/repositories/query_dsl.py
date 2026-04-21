@@ -172,7 +172,7 @@ def _parse_filter_value(token: FilterToken, field: FilterField[Any]) -> Any:
     return _parse_scalar_value(field, token.raw_value)
 
 
-def _apply_operator(
+def apply_filter_operator(
     column: ColumnElement[Any] | InstrumentedAttribute[Any],
     op: FilterOperator,
     value: Any,
@@ -218,7 +218,7 @@ def build_filter_clauses[ModelType: GenericBaseModel](
             clause = field.predicate(model, token.operator, value)
         elif field.resolver is not None:
             column = _resolve_resolver(field.resolver, model)
-            clause = _apply_operator(column, token.operator, value)
+            clause = apply_filter_operator(column, token.operator, value)
         else:
             msg = f'Filter field "{token.field}" requires resolver or predicate.'
             raise ValueError(msg)

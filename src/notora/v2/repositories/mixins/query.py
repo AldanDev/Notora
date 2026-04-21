@@ -26,7 +26,7 @@ class LoadOptionsMixin[ModelType: GenericBaseModel]:
     model: type[ModelType]
     default_options: Sequence[OptionSpec[ModelType]] = ()
 
-    def _resolve_option(self, spec: OptionSpec[ModelType]) -> ExecutableOption:
+    def resolve_option(self, spec: OptionSpec[ModelType]) -> ExecutableOption:
         return spec(self.model) if callable(spec) else spec
 
     def merge_options(
@@ -35,7 +35,7 @@ class LoadOptionsMixin[ModelType: GenericBaseModel]:
     ) -> tuple[ExecutableOption, ...]:
         custom = tuple(options or ())
         specs = (*self.default_options, *custom)
-        return tuple(self._resolve_option(spec) for spec in specs)
+        return tuple(self.resolve_option(spec) for spec in specs)
 
     def apply_options[StatementT: SupportsOptions](
         self,
@@ -52,7 +52,7 @@ class FilterableMixin[ModelType: GenericBaseModel]:
     model: type[ModelType]
     default_filters: Sequence[FilterSpec[ModelType]] = ()
 
-    def _resolve_filter(self, spec: FilterSpec[ModelType]) -> FilterClause:
+    def resolve_filter(self, spec: FilterSpec[ModelType]) -> FilterClause:
         return spec(self.model) if callable(spec) else spec
 
     def merge_filters(
@@ -61,7 +61,7 @@ class FilterableMixin[ModelType: GenericBaseModel]:
     ) -> tuple[FilterClause, ...]:
         custom = tuple(filters or ())
         specs = (*self.default_filters, *custom)
-        return tuple(self._resolve_filter(spec) for spec in specs)
+        return tuple(self.resolve_filter(spec) for spec in specs)
 
     def apply_filters[StatementT: SupportsWhere](
         self,
@@ -78,7 +78,7 @@ class OrderableMixin[ModelType: GenericBaseModel]:
     default_ordering: Sequence[OrderSpec[ModelType]] = ()
     fallback_sort_attribute: str = 'id'
 
-    def _resolve_order(self, spec: OrderSpec[ModelType]) -> OrderClause:
+    def resolve_order(self, spec: OrderSpec[ModelType]) -> OrderClause:
         return spec(self.model) if callable(spec) else spec
 
     def merge_ordering(
@@ -87,7 +87,7 @@ class OrderableMixin[ModelType: GenericBaseModel]:
     ) -> tuple[Any, ...]:
         custom = tuple(ordering or ())
         specs = (*self.default_ordering, *custom)
-        resolved = [self._resolve_order(spec) for spec in specs]
+        resolved = [self.resolve_order(spec) for spec in specs]
         if not resolved and hasattr(self.model, self.fallback_sort_attribute):
             pk_column = getattr(self.model, self.fallback_sort_attribute)
             resolved.append(pk_column.asc())

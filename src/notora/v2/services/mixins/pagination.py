@@ -64,6 +64,7 @@ class PaginationServiceMixin[
         offset: int,
         schema: type[ListSchema] | None = None,
     ) -> 'PaginatedResponseSchema[ListSchema]':
+        """Paginate when `data_query` returns ORM entities (single-model selects)."""
         data: list[ModelType] = await self.execute_scalars_all(session, data_query)
         serialized = self.serialize_many(data, schema=schema)
         total: int = await self.execute_scalar_one(session, count_query)
@@ -99,6 +100,7 @@ class PaginationServiceMixin[
         limit: int,
         offset: int,
     ) -> 'PaginatedResponseSchema[RowT]':
+        """Paginate when `data_query` returns tuple rows (e.g. `add_columns` enrichment)."""
         rows = (await self.execute(session, data_query)).all()
         data = [row_to_schema(row) for row in rows]
         total: int = await self.execute_scalar_one(session, count_query)

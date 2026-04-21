@@ -1,4 +1,4 @@
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from typing import Any
 
 from sqlalchemy import Executable
@@ -88,3 +88,19 @@ class PaginationServiceMixin[
             apply_default_filters=params.apply_default_filters,
             schema=schema,
         )
+
+    async def paginate_rows_from_queries[RowT](
+        self,
+        session: AsyncSession,
+        *,
+        data_query: Executable,
+        count_query: Executable,
+        row_to_schema: Callable[[Any], RowT],
+        limit: int,
+        offset: int,
+    ) -> 'PaginatedResponseSchema[RowT]':
+        rows = (await self.execute(session, data_query)).all()
+        data = [row_to_schema(row) for row in rows]
+        total: int = await self.execute_scalar_one(session, count_query)
+        meta = PaginationMetaSchema.calculate(total=total, limit=limit, offset=offset)
+        return PaginatedResponseSchema(meta=meta, data=data)

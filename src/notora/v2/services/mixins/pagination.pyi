@@ -1,4 +1,4 @@
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from typing import Any, overload
 
 from sqlalchemy import Executable
@@ -91,3 +91,13 @@ class PaginationServiceMixin[
         *,
         schema: type[SchemaT],
     ) -> PaginatedResponseSchema[SchemaT]: ...
+    async def paginate_rows_from_queries[RowT](
+        self,
+        session: AsyncSession,
+        *,
+        data_query: Executable,
+        count_query: Executable,
+        row_to_schema: Callable[[Any], RowT],
+        limit: int,
+        offset: int,
+    ) -> PaginatedResponseSchema[RowT]: ...

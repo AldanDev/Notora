@@ -43,6 +43,7 @@ class ListingServiceMixin[
         ordering: Iterable[OrderSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
         base_query: Any | None = None,
+        apply_default_filters: bool = ...,
     ) -> Sequence[ModelType]: ...
     @overload
     async def list(
@@ -55,6 +56,7 @@ class ListingServiceMixin[
         ordering: Iterable[OrderSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
         base_query: Any | None = None,
+        apply_default_filters: bool = ...,
         schema: None = ...,
     ) -> ListResponse[ListSchema]: ...
     @overload
@@ -68,6 +70,7 @@ class ListingServiceMixin[
         ordering: Iterable[OrderSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
         base_query: Any | None = None,
+        apply_default_filters: bool = ...,
         schema: type[SchemaT],
     ) -> ListResponse[SchemaT]: ...
     async def list_raw_params(

@@ -35,6 +35,7 @@ class PaginationServiceMixin[
         ordering: Iterable[OrderSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
         base_query: Any | None = None,
+        apply_default_filters: bool = True,
         schema: type[ListSchema] | None = None,
     ) -> 'PaginatedResponseSchema[ListSchema]':
         data = await self.list_raw(
@@ -45,9 +46,10 @@ class PaginationServiceMixin[
             ordering=ordering,
             options=options,
             base_query=base_query,
+            apply_default_filters=apply_default_filters,
         )
         serialized = self.serialize_many(data, schema=schema)
-        total_query = self.repo.count(filters=filters)
+        total_query = self.repo.count(filters=filters, apply_default_filters=apply_default_filters)
         total: int = await self.execute_scalar_one(session, total_query)
         meta = PaginationMetaSchema.calculate(total=total, limit=limit, offset=offset)
         return PaginatedResponseSchema(meta=meta, data=serialized)
@@ -83,5 +85,6 @@ class PaginationServiceMixin[
             ordering=params.ordering,
             options=params.options,
             base_query=params.base_query,
+            apply_default_filters=params.apply_default_filters,
             schema=schema,
         )

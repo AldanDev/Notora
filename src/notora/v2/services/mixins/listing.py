@@ -42,6 +42,7 @@ class ListingServiceMixin[
         ordering: Iterable[OrderSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
         base_query: Any | None = None,
+        apply_default_filters: bool = True,
     ) -> Sequence[ModelType]:
         query = self.repo.list(
             filters=filters,
@@ -50,6 +51,7 @@ class ListingServiceMixin[
             ordering=ordering,
             options=options,
             base_query=base_query,
+            apply_default_filters=apply_default_filters,
         )
         return await self.execute_scalars_all(session, query)
 
@@ -63,6 +65,7 @@ class ListingServiceMixin[
         ordering: Iterable[OrderSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
         base_query: Any | None = None,
+        apply_default_filters: bool = True,
         schema: type[ListSchema] | None = None,
     ) -> ListResponse[ListSchema]:
         rows = await self.list_raw(
@@ -73,6 +76,7 @@ class ListingServiceMixin[
             ordering=ordering,
             options=options,
             base_query=base_query,
+            apply_default_filters=apply_default_filters,
         )
         return self.serialize_many(rows, schema=schema)
 
@@ -89,6 +93,7 @@ class ListingServiceMixin[
             ordering=params.ordering,
             options=params.options,
             base_query=params.base_query,
+            apply_default_filters=params.apply_default_filters,
         )
 
     async def list_params(

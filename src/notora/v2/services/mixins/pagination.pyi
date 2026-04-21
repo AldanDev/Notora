@@ -36,6 +36,7 @@ class PaginationServiceMixin[
         ordering: Iterable[OrderSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
         base_query: Any | None = None,
+        apply_default_filters: bool = ...,
         schema: None = ...,
     ) -> PaginatedResponseSchema[ListSchema]: ...
     @overload
@@ -49,6 +50,7 @@ class PaginationServiceMixin[
         ordering: Iterable[OrderSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
         base_query: Any | None = None,
+        apply_default_filters: bool = ...,
         schema: type[SchemaT],
     ) -> PaginatedResponseSchema[SchemaT]: ...
     @overload

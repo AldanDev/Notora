@@ -46,6 +46,7 @@ tests = [
     "pytest-asyncio<2.0.0,>=1.2.0",
     "polyfactory<4.0.0,>=3.0.0",
     "testcontainers[postgres]>=4.14.0",
+    "fastapi>=0.115",
 ]
 dev = [
     "pre-commit<5.0.0,>=4.4.0",

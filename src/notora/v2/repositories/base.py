@@ -107,6 +107,7 @@ class RepositoryProtocol[PKType, ModelType: GenericBaseModel](Protocol):
         ordering: Iterable[OrderSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
         base_query: Any | None = None,
+        apply_default_filters: bool = ...,
     ) -> TypedReturnsRows[tuple[ModelType]]: ...
 
     def list_by_params(
@@ -117,6 +118,7 @@ class RepositoryProtocol[PKType, ModelType: GenericBaseModel](Protocol):
         self,
         *,
         filters: Iterable[FilterSpec[ModelType]] | None = None,
+        apply_default_filters: bool = ...,
     ) -> TypedReturnsRows[tuple[int]]: ...
 
     def retrieve(
@@ -132,6 +134,7 @@ class RepositoryProtocol[PKType, ModelType: GenericBaseModel](Protocol):
         filters: Iterable[FilterSpec[ModelType]] | None = None,
         ordering: Iterable[OrderSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
+        apply_default_filters: bool = ...,
     ) -> TypedReturnsRows[tuple[ModelType]]: ...
 
     def retrieve_one_by(
@@ -140,6 +143,7 @@ class RepositoryProtocol[PKType, ModelType: GenericBaseModel](Protocol):
         filters: Iterable[FilterSpec[ModelType]] | None = None,
         ordering: Iterable[OrderSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
+        apply_default_filters: bool = ...,
     ) -> TypedReturnsRows[tuple[ModelType]]: ...
 
     def create(

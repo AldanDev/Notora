@@ -21,6 +21,7 @@ class QueryParams[ModelType: GenericBaseModel]:
     limit: int | DefaultLimit | None = DEFAULT_LIMIT
     offset: int = 0
     base_query: Select[tuple[ModelType]] | None = None
+    apply_default_filters: bool = True
 
 
 @dataclass(slots=True)
@@ -31,3 +32,4 @@ class PaginationParams[ModelType: GenericBaseModel]:
     limit: int = 20
     offset: int = 0
     base_query: Select[tuple[ModelType]] | None = None
+    apply_default_filters: bool = True

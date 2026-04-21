@@ -1,6 +1,7 @@
 from typing import Any
 from uuid import UUID, uuid4
 
+import pytest
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -95,3 +96,128 @@ async def test_paginate_rows_from_queries_returns_enriched_schema(
     expected_by_email = {'u1@ex.com': 2, 'u2@ex.com': 1}
     by_email = {item.email: item.role_count for item in page.data}
     assert by_email == expected_by_email
+
+
+async def test_paginate_rows_from_queries_empty_result_when_no_seed(
+    db_session: AsyncSession,
+    user_service: V2UserService,
+) -> None:
+    role_count_subq = (
+        select(func.count())
+        .select_from(V2UserRole)
+        .where(V2UserRole.user_id == V2User.id)
+        .correlate(V2User)
+        .scalar_subquery()
+    )
+    data_query = (
+        select(V2User, role_count_subq.label('role_count'))
+        .where(V2User.deleted_at.is_(None))
+        .limit(10)
+        .offset(0)
+    )
+    count_query = select(func.count()).select_from(V2User).where(V2User.deleted_at.is_(None))
+
+    def to_schema(row: Any) -> UserWithRoleCountSchema:
+        user: V2User = row[0]
+        role_count: int = row[1]
+        return UserWithRoleCountSchema(
+            id=user.id,
+            email=user.email,
+            name=user.name,
+            role_count=role_count,
+        )
+
+    page = await user_service.paginate_rows_from_queries(
+        db_session,
+        data_query=data_query,
+        count_query=count_query,
+        row_to_schema=to_schema,
+        limit=10,
+        offset=0,
+    )
+    assert page.meta.total == 0
+    assert list(page.data) == []
+
+
+async def test_paginate_rows_from_queries_offset_beyond_total_returns_empty_page(
+    db_session: AsyncSession,
+    user_service: V2UserService,
+) -> None:
+    await _seed_users_with_roles(db_session, user_service)
+
+    role_count_subq = (
+        select(func.count())
+        .select_from(V2UserRole)
+        .where(V2UserRole.user_id == V2User.id)
+        .correlate(V2User)
+        .scalar_subquery()
+    )
+    limit = 10
+    offset = 100  # past the 3 seeded users
+    data_query = (
+        select(V2User, role_count_subq.label('role_count'))
+        .where(V2User.deleted_at.is_(None))
+        .order_by(V2User.email.asc())
+        .limit(limit)
+        .offset(offset)
+    )
+    count_query = select(func.count()).select_from(V2User).where(V2User.deleted_at.is_(None))
+
+    def to_schema(row: Any) -> UserWithRoleCountSchema:
+        user: V2User = row[0]
+        role_count: int = row[1]
+        return UserWithRoleCountSchema(
+            id=user.id,
+            email=user.email,
+            name=user.name,
+            role_count=role_count,
+        )
+
+    page = await user_service.paginate_rows_from_queries(
+        db_session,
+        data_query=data_query,
+        count_query=count_query,
+        row_to_schema=to_schema,
+        limit=limit,
+        offset=offset,
+    )
+
+    expected_total = 3
+    assert page.meta.total == expected_total
+    assert list(page.data) == []
+    assert page.meta.offset == offset
+
+
+async def test_paginate_rows_from_queries_propagates_row_to_schema_exception(
+    db_session: AsyncSession,
+    user_service: V2UserService,
+) -> None:
+    await _seed_users_with_roles(db_session, user_service)
+
+    role_count_subq = (
+        select(func.count())
+        .select_from(V2UserRole)
+        .where(V2UserRole.user_id == V2User.id)
+        .correlate(V2User)
+        .scalar_subquery()
+    )
+    data_query = select(V2User, role_count_subq.label('role_count')).where(
+        V2User.deleted_at.is_(None)
+    )
+    count_query = select(func.count()).select_from(V2User).where(V2User.deleted_at.is_(None))
+
+    class _SchemaError(RuntimeError):
+        pass
+
+    def to_schema(_row: Any) -> UserWithRoleCountSchema:
+        raise _SchemaError
+
+    with pytest.raises(_SchemaError):
+        await user_service.paginate_rows_from_queries(
+            db_session,
+            data_query=data_query,
+            count_query=count_query,
+            row_to_schema=to_schema,
+            limit=10,
+            offset=0,
+        )

@@ -26,6 +26,7 @@ from notora.v2.repositories import (
 from notora.v2.schemas import (
     BaseRequestSchema,
     BaseResponseSchema,
+    ClientMeta,
     PaginatedResponseSchema,
     PaginationMetaSchema,
     PydanticFilterField,
@@ -42,6 +43,7 @@ from notora.v2.services import (
 __all__ = [
     'BaseRequestSchema',
     'BaseResponseSchema',
+    'ClientMeta',
     'FilterClause',
     'FilterFactory',
     'FilterField',

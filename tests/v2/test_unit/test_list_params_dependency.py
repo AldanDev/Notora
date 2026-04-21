@@ -92,8 +92,8 @@ def test_empty_filters_and_ordering_produces_empty_specs() -> None:
     assert list(params.ordering or []) == []
 
 
-def test_default_bypass_param_disabled_keeps_apply_default_filters_true() -> None:
-    """Without default_filter_bypass_param, the bypass path is absent."""
+def test_bypass_param_not_configured_keeps_apply_default_filters_true() -> None:
+    """When default_filter_bypass_param is not configured, the bypass path is absent and apply_default_filters stays True."""
     dep = _build_base_dep()
     default_limit = 10
     default_offset = 0

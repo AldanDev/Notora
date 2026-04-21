@@ -76,6 +76,7 @@ async def list_users(session: AsyncSession) -> list[UserResponseSchema]:
 - Repositories and configs: `repositories.md`
 - Services and `actor_id`: `services.md`
 - Query DSL and FastAPI: `query-dsl.md`
+- Query glossary: `glossary.md`
 - Pagination: `pagination.md`
 - M2M sync helpers: `m2m.md`
 - Recipes and patterns: `recipes.md`

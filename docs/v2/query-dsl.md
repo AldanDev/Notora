@@ -159,3 +159,8 @@ query_params_dep = make_query_params_dependency(
 async def list_users(params = Depends(query_params_dep)):
     return await service.list_params(session, params)
 ```
+
+## See also
+
+- [Pydantic query schemas](./glossary.md#two-paths-from-http-to-sql) — the typed-fields alternative for admin UIs.
+- [Glossary](./glossary.md) — disambiguating `FilterClause` / `FilterSpec` / `FilterField` / etc.

@@ -27,6 +27,7 @@ class LoadOptionsMixin[ModelType: GenericBaseModel]:
     default_options: Sequence[OptionSpec[ModelType]] = ()
 
     def resolve_option(self, spec: OptionSpec[ModelType]) -> ExecutableOption:
+        """Resolve an OptionSpec (callable or ready ExecutableOption) against the mixin's model."""
         return spec(self.model) if callable(spec) else spec
 
     def merge_options(
@@ -53,6 +54,7 @@ class FilterableMixin[ModelType: GenericBaseModel]:
     default_filters: Sequence[FilterSpec[ModelType]] = ()
 
     def resolve_filter(self, spec: FilterSpec[ModelType]) -> FilterClause:
+        """Resolve a FilterSpec (callable or ready clause) against the mixin's model."""
         return spec(self.model) if callable(spec) else spec
 
     def merge_filters(
@@ -85,6 +87,7 @@ class OrderableMixin[ModelType: GenericBaseModel]:
     fallback_sort_attribute: str = 'id'
 
     def resolve_order(self, spec: OrderSpec[ModelType]) -> OrderClause:
+        """Resolve an OrderSpec (callable or ready clause) against the mixin's model."""
         return spec(self.model) if callable(spec) else spec
 
     def merge_ordering(

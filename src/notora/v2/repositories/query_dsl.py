@@ -141,6 +141,7 @@ def resolve_to_column[ModelType: GenericBaseModel](
     resolver: FilterResolver[ModelType] | SortResolver[ModelType],
     model: type[ModelType],
 ) -> InstrumentedAttribute[Any] | ColumnElement[Any]:
+    """Resolve a query resolver (callable or column-like) against the model; returns the column."""
     return resolver(model) if callable(resolver) else resolver
 
 

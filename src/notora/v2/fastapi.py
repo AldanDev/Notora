@@ -48,6 +48,9 @@ def make_list_params_dependency[ModelType: GenericBaseModel](
         msg = 'fastapi is required to use make_list_params_dependency.'
         raise RuntimeError(msg) from exc
 
+    # FastAPI resolves each sub-dependency by reading its parameter's type annotation,
+    # so `Depends()` (no target) is correct here — the target is inferred from
+    # `filters: filters_schema` / `ordering: order_schema` below.
     filters_dep = fastapi.Depends()
     ordering_dep = fastapi.Depends()
 

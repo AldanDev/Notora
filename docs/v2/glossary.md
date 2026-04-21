@@ -35,17 +35,21 @@ Terminology for filtering, ordering, and pagination. Use this to disambiguate th
 | `PydanticFiltersSchema[M]` | Pydantic base | OpenAPI-native query-param filters → `list[FilterSpec[M]]`. |
 | `PydanticOrderBySchema[M]` | Pydantic base | OpenAPI-native `order_by` + `direction` → `list[OrderSpec[M]]`. |
 | `make_query_params_dependency` | Factory | Build a FastAPI `Depends` for the DSL path. |
-| `make_list_params_dependency` | Factory | Build a FastAPI `Depends` for the pydantic path (composes filters + ordering + pagination into one `PaginationParams`). |
+| `make_list_params_dependency` | Factory | Build a FastAPI `Depends` for the pydantic path. Composes filters + ordering + pagination into one `PaginationParams`. Supports `max_limit=200` default cap and optional `default_filter_bypass_param` for exposing the bypass flag under a domain-appropriate query name (e.g. `show_deleted`). |
+| `paginate_from_queries` | Service method | Paginate ORM-entity rows from ready-made `data_query` + `count_query` (no add_columns). |
+| `paginate_rows_from_queries` | Service method | Paginate tuple rows from a `Select` with `add_columns`/`outerjoin`. Caller supplies `data_query`, `count_query`, and a `row_to_schema` callable. |
 
 ## Default filters and the bypass flag
 
-Repositories can carry a `default_filters` tuple that gets merged with per-call filters. `SoftDeleteRepository` adds `deleted_at IS NULL`; other repos can register arbitrary clauses via `RepoConfig.default_filters`.
+Repositories can carry a `default_filters` sequence that gets merged with per-call filters. `SoftDeleteRepository` adds `deleted_at IS NULL`; other repos can register arbitrary clauses via `RepoConfig.default_filters`.
 
 Every method that accepts filters also accepts `apply_default_filters: bool = True`. Pass `False` to skip the defaults for a single call. Used by admin endpoints that need to see soft-deleted rows.
 
 The flag is also a field on `QueryParams` and `PaginationParams`, so it travels through `list_params` / `paginate_params` automatically.
 
 When `paginate(apply_default_filters=False)` is called, BOTH the data query AND the count query skip the defaults. `meta.total` stays consistent with `len(page.data)`.
+
+`build_query_params` (the DSL path's entrypoint) does NOT thread `apply_default_filters` — DSL strings describe per-call filters, not repo-layer defaults. If you need the bypass on a DSL endpoint, construct `QueryParams(..., apply_default_filters=False)` manually after `build_query_params` returns.
 
 ## Two paths from HTTP to SQL
 
@@ -102,3 +106,7 @@ class ThingFilters(PydanticFiltersSchema[Thing]):
     # ThingFilters.filter_fields['name'] = PydanticFilterField(...)
     # This mutates the BASE class's dict and leaks to all other subclasses.
 ```
+
+**Pydantic field without `filter_fields` entry = silent skip:** `build_filter_specs` iterates `model_dump(exclude_unset=True, exclude_none=True)` and skips any field name that's not in `filter_fields`. Pydantic accepts the HTTP value (so no HTTP 422), but the filter has NO effect on the SQL query. This is by design — it lets a schema carry non-filter fields (mode toggles, pagination hints, etc.) alongside the declared filters — but it means forgetting to register a field produces a "ghost filter" that silently does nothing.
+
+Mitigation: when authoring a filter schema, add every pydantic field to `filter_fields`. If you want a non-filter field in the same schema, name it distinctly (e.g. prefix with `_`) and document it.

@@ -71,7 +71,10 @@ async def test_paginate_rows_from_queries_returns_enriched_schema(
         user: V2User = row[0]
         role_count: int = row[1]
         return UserWithRoleCountSchema(
-            id=user.id, email=user.email, name=user.name, role_count=role_count,
+            id=user.id,
+            email=user.email,
+            name=user.name,
+            role_count=role_count,
         )
 
     page = await user_service.paginate_rows_from_queries(

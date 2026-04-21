@@ -29,9 +29,7 @@ async def test_list_params_excludes_soft_deleted_by_default(
 ) -> None:
     await _seed_one_live_one_deleted(db_session, user_service)
 
-    items = await user_service.list_params(
-        db_session, QueryParams[V2User](limit=None)
-    )
+    items = await user_service.list_params(db_session, QueryParams[V2User](limit=None))
     emails = {item.email for item in items}
     assert emails == {'live@ex.com'}
 
@@ -66,9 +64,7 @@ async def test_paginate_includes_soft_deleted_when_bypassed(
 ) -> None:
     await _seed_one_live_one_deleted(db_session, user_service)
 
-    page = await user_service.paginate(
-        db_session, limit=20, offset=0, apply_default_filters=False
-    )
+    page = await user_service.paginate(db_session, limit=20, offset=0, apply_default_filters=False)
     expected_total_including_deleted = 2
     assert page.meta.total == expected_total_including_deleted
 

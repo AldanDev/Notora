@@ -25,7 +25,7 @@ class BoxFilters(PydanticFiltersSchema[Box]):
     weight_gte: int | None = None
 
     filter_fields: ClassVar[dict[str, PydanticFilterField[Any]]] = {
-        'name':       PydanticFilterField(resolver=Box.name),
+        'name': PydanticFilterField(resolver=Box.name),
         'weight_gte': PydanticFilterField(resolver=Box.weight, operator='gte'),
     }
 
@@ -35,7 +35,7 @@ class BoxOrdering(PydanticOrderBySchema[Box]):
     direction: Literal['asc', 'desc'] = 'asc'
 
     sort_fields: ClassVar[dict[str, PydanticSortField[Any]]] = {
-        'name':   PydanticSortField(resolver=Box.name),
+        'name': PydanticSortField(resolver=Box.name),
         'weight': PydanticSortField(resolver=Box.weight),
     }
 
@@ -155,17 +155,13 @@ def test_bypass_param_exposes_alias_to_fastapi() -> None:
     dependant = get_dependant(path='/', call=dep)
     # FastAPI stores the HTTP-facing name on ``field_info.alias`` while ``p.name`` remains
     # the Python parameter name — so filtering by alias is what proves the public API.
-    bypass_params = [
-        p for p in dependant.query_params if p.field_info.alias == 'show_deleted'
-    ]
+    bypass_params = [p for p in dependant.query_params if p.field_info.alias == 'show_deleted']
     assert len(bypass_params) == 1
     assert bypass_params[0].name == 'bypass_default_filters'
     # When no bypass param is configured, no such public alias exists.
     plain_dep = _build_base_dep()
     plain_dependant = get_dependant(path='/', call=plain_dep)
-    assert not any(
-        p.field_info.alias == 'show_deleted' for p in plain_dependant.query_params
-    )
+    assert not any(p.field_info.alias == 'show_deleted' for p in plain_dependant.query_params)
 
 
 def test_max_limit_caps_limit_query() -> None:

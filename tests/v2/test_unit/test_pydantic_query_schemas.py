@@ -33,9 +33,9 @@ class ThingFilters(PydanticFiltersSchema[Thing]):
     q: str | None = None
 
     filter_fields: ClassVar[dict[str, PydanticFilterField[Any]]] = {
-        'name':      PydanticFilterField(resolver=Thing.name),
-        'age_gte':   PydanticFilterField(resolver=Thing.age, operator='gte'),
-        'owner_id':  PydanticFilterField(resolver=Thing.owner_id),
+        'name': PydanticFilterField(resolver=Thing.name),
+        'age_gte': PydanticFilterField(resolver=Thing.age, operator='gte'),
+        'owner_id': PydanticFilterField(resolver=Thing.owner_id),
         'is_active': PydanticFilterField(resolver=Thing.is_active),
         'q': PydanticFilterField(
             predicate=lambda m, op, v: or_(
@@ -52,7 +52,7 @@ class ThingOrdering(PydanticOrderBySchema[Thing]):
 
     sort_fields: ClassVar[dict[str, PydanticSortField[Any]]] = {
         'name': PydanticSortField(resolver=Thing.name),
-        'age':  PydanticSortField(resolver=Thing.age),
+        'age': PydanticSortField(resolver=Thing.age),
     }
 
 

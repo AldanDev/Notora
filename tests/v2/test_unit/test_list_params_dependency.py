@@ -1,6 +1,10 @@
 from typing import Any, ClassVar, Literal
 
-from fastapi.dependencies.utils import get_dependant
+import pytest
+
+pytest.importorskip('fastapi')
+
+from fastapi.dependencies.utils import get_dependant  # pyright: ignore[reportMissingImports]
 from sqlalchemy import Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 

@@ -26,7 +26,8 @@ class LoadOptionsMixin[ModelType: GenericBaseModel]:
     model: type[ModelType]
     default_options: Sequence[OptionSpec[ModelType]] = ()
 
-    def _resolve_option(self, spec: OptionSpec[ModelType]) -> ExecutableOption:
+    def resolve_option(self, spec: OptionSpec[ModelType]) -> ExecutableOption:
+        """Resolve an OptionSpec (callable or ready ExecutableOption) against the mixin's model."""
         return spec(self.model) if callable(spec) else spec
 
     def merge_options(
@@ -35,7 +36,7 @@ class LoadOptionsMixin[ModelType: GenericBaseModel]:
     ) -> tuple[ExecutableOption, ...]:
         custom = tuple(options or ())
         specs = (*self.default_options, *custom)
-        return tuple(self._resolve_option(spec) for spec in specs)
+        return tuple(self.resolve_option(spec) for spec in specs)
 
     def apply_options[StatementT: SupportsOptions](
         self,
@@ -52,23 +53,30 @@ class FilterableMixin[ModelType: GenericBaseModel]:
     model: type[ModelType]
     default_filters: Sequence[FilterSpec[ModelType]] = ()
 
-    def _resolve_filter(self, spec: FilterSpec[ModelType]) -> FilterClause:
+    def resolve_filter(self, spec: FilterSpec[ModelType]) -> FilterClause:
+        """Resolve a FilterSpec (callable or ready clause) against the mixin's model."""
         return spec(self.model) if callable(spec) else spec
 
     def merge_filters(
         self,
         filters: Iterable[FilterSpec[ModelType]] | None = None,
+        *,
+        apply_default_filters: bool = True,
     ) -> tuple[FilterClause, ...]:
         custom = tuple(filters or ())
-        specs = (*self.default_filters, *custom)
-        return tuple(self._resolve_filter(spec) for spec in specs)
+        specs: tuple[FilterSpec[ModelType], ...] = (
+            (*self.default_filters, *custom) if apply_default_filters else custom
+        )
+        return tuple(self.resolve_filter(spec) for spec in specs)
 
     def apply_filters[StatementT: SupportsWhere](
         self,
         statement: StatementT,
         filters: Iterable[FilterSpec[ModelType]] | None = None,
+        *,
+        apply_default_filters: bool = True,
     ) -> StatementT:
-        for clause in self.merge_filters(filters):
+        for clause in self.merge_filters(filters, apply_default_filters=apply_default_filters):
             statement = statement.where(clause)
         return statement
 
@@ -78,7 +86,8 @@ class OrderableMixin[ModelType: GenericBaseModel]:
     default_ordering: Sequence[OrderSpec[ModelType]] = ()
     fallback_sort_attribute: str = 'id'
 
-    def _resolve_order(self, spec: OrderSpec[ModelType]) -> OrderClause:
+    def resolve_order(self, spec: OrderSpec[ModelType]) -> OrderClause:
+        """Resolve an OrderSpec (callable or ready clause) against the mixin's model."""
         return spec(self.model) if callable(spec) else spec
 
     def merge_ordering(
@@ -87,7 +96,7 @@ class OrderableMixin[ModelType: GenericBaseModel]:
     ) -> tuple[Any, ...]:
         custom = tuple(ordering or ())
         specs = (*self.default_ordering, *custom)
-        resolved = [self._resolve_order(spec) for spec in specs]
+        resolved = [self.resolve_order(spec) for spec in specs]
         if not resolved and hasattr(self.model, self.fallback_sort_attribute):
             pk_column = getattr(self.model, self.fallback_sort_attribute)
             resolved.append(pk_column.asc())
@@ -130,12 +139,13 @@ class ListableMixin[ModelType: GenericBaseModel](
         ordering: Iterable[OrderSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
         base_query: Select[tuple[ModelType]] | None = None,
+        apply_default_filters: bool = True,
     ) -> Select[tuple[ModelType]]:
         if base_query is None:
             stmt = self.select(options=options)
         else:
             stmt = self.apply_options(base_query, options)
-        stmt = self.apply_filters(stmt, filters)
+        stmt = self.apply_filters(stmt, filters, apply_default_filters=apply_default_filters)
         stmt = self.apply_ordering(stmt, ordering)
         if limit is DEFAULT_LIMIT:
             limit_value = self.default_limit
@@ -157,6 +167,7 @@ class ListableMixin[ModelType: GenericBaseModel](
             ordering=params.ordering,
             options=params.options,
             base_query=params.base_query,
+            apply_default_filters=params.apply_default_filters,
         )
 
 
@@ -191,9 +202,10 @@ class RetrievableMixin[PKType, ModelType: GenericBaseModel](
         filters: Iterable[FilterSpec[ModelType]] | None = None,
         ordering: Iterable[OrderSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
+        apply_default_filters: bool = True,
     ) -> Select[tuple[ModelType]]:
         stmt = self.select(options=options)
-        stmt = self.apply_filters(stmt, filters)
+        stmt = self.apply_filters(stmt, filters, apply_default_filters=apply_default_filters)
         stmt = self.apply_ordering(stmt, ordering)
         return stmt
 
@@ -203,8 +215,14 @@ class RetrievableMixin[PKType, ModelType: GenericBaseModel](
         filters: Iterable[FilterSpec[ModelType]] | None = None,
         ordering: Iterable[OrderSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
+        apply_default_filters: bool = True,
     ) -> Select[tuple[ModelType]]:
-        stmt = self.retrieve_by(filters=filters, ordering=ordering, options=options)
+        stmt = self.retrieve_by(
+            filters=filters,
+            ordering=ordering,
+            options=options,
+            apply_default_filters=apply_default_filters,
+        )
         return stmt.limit(1)
 
 
@@ -213,6 +231,7 @@ class CountableMixin[ModelType: GenericBaseModel](FilterableMixin[ModelType]):
         self,
         *,
         filters: Iterable[FilterSpec[ModelType]] | None = None,
+        apply_default_filters: bool = True,
     ) -> Select[tuple[int]]:
         stmt = select(func.count()).select_from(self.model)
-        return self.apply_filters(stmt, filters)
+        return self.apply_filters(stmt, filters, apply_default_filters=apply_default_filters)

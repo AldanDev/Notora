@@ -137,10 +137,11 @@ def parse_sort_token(raw: str) -> SortToken:
     return SortToken(field=field_name, direction=direction)
 
 
-def _resolve_resolver[ModelType: GenericBaseModel](
+def resolve_to_column[ModelType: GenericBaseModel](
     resolver: FilterResolver[ModelType] | SortResolver[ModelType],
     model: type[ModelType],
 ) -> InstrumentedAttribute[Any] | ColumnElement[Any]:
+    """Resolve a query resolver (callable or column-like) against the model; returns the column."""
     return resolver(model) if callable(resolver) else resolver
 
 
@@ -172,7 +173,7 @@ def _parse_filter_value(token: FilterToken, field: FilterField[Any]) -> Any:
     return _parse_scalar_value(field, token.raw_value)
 
 
-def _apply_operator(
+def apply_filter_operator(
     column: ColumnElement[Any] | InstrumentedAttribute[Any],
     op: FilterOperator,
     value: Any,
@@ -217,8 +218,8 @@ def build_filter_clauses[ModelType: GenericBaseModel](
         if field.predicate is not None:
             clause = field.predicate(model, token.operator, value)
         elif field.resolver is not None:
-            column = _resolve_resolver(field.resolver, model)
-            clause = _apply_operator(column, token.operator, value)
+            column = resolve_to_column(field.resolver, model)
+            clause = apply_filter_operator(column, token.operator, value)
         else:
             msg = f'Filter field "{token.field}" requires resolver or predicate.'
             raise ValueError(msg)
@@ -238,7 +239,7 @@ def build_sort_clauses[ModelType: GenericBaseModel](
         if field is None:
             msg = f'Unsupported sort field "{token.field}".'
             raise ValueError(msg)
-        column = _resolve_resolver(field.resolver, model)
+        column = resolve_to_column(field.resolver, model)
         if token.direction == 'desc':
             clauses.append(column.desc())
         else:

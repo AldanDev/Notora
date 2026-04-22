@@ -1,0 +1,184 @@
+from typing import Any, ClassVar, Literal, cast
+from uuid import UUID, uuid4
+
+import pytest
+from sqlalchemy import Boolean, Integer, String
+from sqlalchemy.dialects import postgresql
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.sql import ColumnElement, or_
+
+from notora.v2.models.base import GenericBaseModel
+from notora.v2.repositories.types import FilterSpec, OrderSpec
+from notora.v2.schemas.query import (
+    PydanticFilterField,
+    PydanticFiltersSchema,
+    PydanticOrderBySchema,
+    PydanticSortField,
+)
+
+
+class Thing(GenericBaseModel):
+    name: Mapped[str] = mapped_column(String)
+    age: Mapped[int] = mapped_column(Integer)
+    owner_id: Mapped[UUID] = mapped_column(PGUUID)
+    is_active: Mapped[bool] = mapped_column(Boolean)
+
+
+class ThingFilters(PydanticFiltersSchema[Thing]):
+    name: str | None = None
+    age_gte: int | None = None
+    owner_id: UUID | None = None
+    is_active: bool | None = None
+    q: str | None = None
+
+    filter_fields: ClassVar[dict[str, PydanticFilterField[Any]]] = {
+        'name': PydanticFilterField(resolver=Thing.name),
+        'age_gte': PydanticFilterField(resolver=Thing.age, operator='gte'),
+        'owner_id': PydanticFilterField(resolver=Thing.owner_id),
+        'is_active': PydanticFilterField(resolver=Thing.is_active),
+        'q': PydanticFilterField(
+            predicate=lambda m, op, v: or_(
+                m.name.ilike(f'%{v}%'),
+                m.owner_id.cast(String).ilike(f'%{v}%'),
+            ),
+        ),
+    }
+
+
+class ThingOrdering(PydanticOrderBySchema[Thing]):
+    order_by: Literal['name', 'age'] | None = None
+    direction: Literal['asc', 'desc'] = 'asc'
+
+    sort_fields: ClassVar[dict[str, PydanticSortField[Any]]] = {
+        'name': PydanticSortField(resolver=Thing.name),
+        'age': PydanticSortField(resolver=Thing.age),
+    }
+
+
+def _render(spec: FilterSpec[Any] | OrderSpec[Any]) -> str:
+    assert not callable(spec)
+    clause = cast(ColumnElement[Any], spec)
+    return str(
+        clause.compile(
+            dialect=postgresql.dialect(),  # type: ignore[no-untyped-call]
+            compile_kwargs={'literal_binds': True},
+        ),
+    )
+
+
+def test_unset_fields_produce_no_specs() -> None:
+    filters = ThingFilters()
+    assert filters.build_filter_specs(Thing) == []
+
+
+def test_none_values_are_excluded() -> None:
+    filters = ThingFilters(name=None, age_gte=None)
+    assert filters.build_filter_specs(Thing) == []
+
+
+def test_equality_field_produces_eq_clause() -> None:
+    filters = ThingFilters(name='foo')
+    specs = filters.build_filter_specs(Thing)
+    assert len(specs) == 1
+    assert "thing.name = 'foo'" in _render(specs[0])
+
+
+def test_operator_override_gte() -> None:
+    expected_age = 18
+    filters = ThingFilters(age_gte=expected_age)
+    specs = filters.build_filter_specs(Thing)
+    assert len(specs) == 1
+    assert f'thing.age >= {expected_age}' in _render(specs[0])
+
+
+def test_uuid_field_produces_eq_clause() -> None:
+    target = uuid4()
+    filters = ThingFilters(owner_id=target)
+    specs = filters.build_filter_specs(Thing)
+    assert len(specs) == 1
+    assert str(target) in _render(specs[0])
+
+
+def test_bool_false_still_produces_clause() -> None:
+    filters = ThingFilters(is_active=False)
+    specs = filters.build_filter_specs(Thing)
+    assert len(specs) == 1
+    assert 'thing.is_active = false' in _render(specs[0])
+
+
+def test_predicate_based_field() -> None:
+    filters = ThingFilters(q='sea')
+    specs = filters.build_filter_specs(Thing)
+    assert len(specs) == 1
+    rendered = _render(specs[0])
+    assert 'sea' in rendered
+    assert 'thing.name ILIKE' in rendered
+
+
+def test_field_absent_from_allowlist_is_skipped() -> None:
+    class ExtraFilters(PydanticFiltersSchema[Thing]):
+        name: str | None = None
+        untracked: str | None = None
+        filter_fields: ClassVar[dict[str, PydanticFilterField[Any]]] = {
+            'name': PydanticFilterField(resolver=Thing.name),
+        }
+
+    f = ExtraFilters(name='x', untracked='y')
+    specs = f.build_filter_specs(Thing)
+    assert len(specs) == 1
+    assert "thing.name = 'x'" in _render(specs[0])
+
+
+def test_order_by_none_produces_no_ordering() -> None:
+    order = ThingOrdering()
+    assert order.build_ordering(Thing) == []
+
+
+def test_order_by_ascending() -> None:
+    order = ThingOrdering(order_by='name', direction='asc')
+    specs = order.build_ordering(Thing)
+    assert len(specs) == 1
+    assert 'thing.name ASC' in _render(specs[0])
+
+
+def test_order_by_descending() -> None:
+    order = ThingOrdering(order_by='age', direction='desc')
+    specs = order.build_ordering(Thing)
+    assert len(specs) == 1
+    assert 'thing.age DESC' in _render(specs[0])
+
+
+def test_order_by_unknown_field_raises() -> None:
+    class BrokenOrder(PydanticOrderBySchema[Thing]):
+        order_by: str | None = None
+        direction: Literal['asc', 'desc'] = 'asc'
+        sort_fields: ClassVar[dict[str, PydanticSortField[Any]]] = {}
+
+    order = BrokenOrder(order_by='name')
+    with pytest.raises(ValueError, match='Unsupported sort field'):
+        order.build_ordering(Thing)
+
+
+def test_filter_field_without_resolver_or_predicate_raises() -> None:
+    class BrokenFilters(PydanticFiltersSchema[Thing]):
+        name: str | None = None
+        filter_fields: ClassVar[dict[str, PydanticFilterField[Any]]] = {
+            'name': PydanticFilterField(),
+        }
+
+    f = BrokenFilters(name='x')
+    with pytest.raises(ValueError, match='resolver or predicate'):
+        f.build_filter_specs(Thing)
+
+
+def test_resolver_can_be_callable() -> None:
+    class CallableResolverFilters(PydanticFiltersSchema[Thing]):
+        name: str | None = None
+        filter_fields: ClassVar[dict[str, PydanticFilterField[Any]]] = {
+            'name': PydanticFilterField(resolver=lambda m: m.name),
+        }
+
+    f = CallableResolverFilters(name='y')
+    specs = f.build_filter_specs(Thing)
+    assert "thing.name = 'y'" in _render(specs[0])

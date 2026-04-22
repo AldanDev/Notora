@@ -1,4 +1,4 @@
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from typing import Any
 
 from sqlalchemy import Executable
@@ -35,8 +35,10 @@ class PaginationServiceMixin[
         ordering: Iterable[OrderSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
         base_query: Any | None = None,
+        apply_default_filters: bool = True,
         schema: type[ListSchema] | None = None,
     ) -> 'PaginatedResponseSchema[ListSchema]':
+        """Paginate with meta.total coherent to len(page.data); count_query honors apply_default_filters."""
         data = await self.list_raw(
             session,
             filters=filters,
@@ -45,9 +47,10 @@ class PaginationServiceMixin[
             ordering=ordering,
             options=options,
             base_query=base_query,
+            apply_default_filters=apply_default_filters,
         )
         serialized = self.serialize_many(data, schema=schema)
-        total_query = self.repo.count(filters=filters)
+        total_query = self.repo.count(filters=filters, apply_default_filters=apply_default_filters)
         total: int = await self.execute_scalar_one(session, total_query)
         meta = PaginationMetaSchema.calculate(total=total, limit=limit, offset=offset)
         return PaginatedResponseSchema(meta=meta, data=serialized)
@@ -62,6 +65,7 @@ class PaginationServiceMixin[
         offset: int,
         schema: type[ListSchema] | None = None,
     ) -> 'PaginatedResponseSchema[ListSchema]':
+        """Paginate when `data_query` returns ORM entities (single-model selects)."""
         data: list[ModelType] = await self.execute_scalars_all(session, data_query)
         serialized = self.serialize_many(data, schema=schema)
         total: int = await self.execute_scalar_one(session, count_query)
@@ -83,5 +87,23 @@ class PaginationServiceMixin[
             ordering=params.ordering,
             options=params.options,
             base_query=params.base_query,
+            apply_default_filters=params.apply_default_filters,
             schema=schema,
         )
+
+    async def paginate_rows_from_queries[RowT: BaseResponseSchema](
+        self,
+        session: AsyncSession,
+        *,
+        data_query: Executable,
+        count_query: Executable,
+        row_to_schema: Callable[[Any], RowT],
+        limit: int,
+        offset: int,
+    ) -> 'PaginatedResponseSchema[RowT]':
+        """Paginate when `data_query` returns tuple rows (e.g. `add_columns` enrichment)."""
+        rows = (await self.execute(session, data_query)).all()
+        data = [row_to_schema(row) for row in rows]
+        total: int = await self.execute_scalar_one(session, count_query)
+        meta = PaginationMetaSchema.calculate(total=total, limit=limit, offset=offset)
+        return PaginatedResponseSchema(meta=meta, data=data)

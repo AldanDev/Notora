@@ -32,6 +32,7 @@ def test_top_level_surface_matches_expected() -> None:
         'BaseRequestSchema',
         'BaseResponseSchema',
         'ClientMeta',
+        'Filter',
         'PaginatedResponseSchema',
         'PaginationMetaSchema',
         'PydanticFilterField',

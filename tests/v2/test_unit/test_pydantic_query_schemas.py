@@ -309,3 +309,17 @@ def test_pure_annotated_inheritance_works() -> None:
         age: Annotated[int | None, Filter(resolver=Thing.age)] = None
 
     assert set(AnnotatedChild._annotated_filter_fields) == {'name', 'age'}
+
+
+def test_annotated_schema_builds_filter_specs() -> None:
+    class FooFilters(PydanticFiltersSchema[Thing]):
+        name: Annotated[str | None, Filter(resolver=Thing.name)] = None
+        age_gte: Annotated[int | None, Filter(resolver=Thing.age, operator='gte')] = None
+
+    expected_age = 18
+    filters = FooFilters(name='alice', age_gte=expected_age)
+    specs = filters.build_filter_specs(Thing)
+    rendered = sorted(_render(s) for s in specs)
+    assert any("thing.name = 'alice'" in r for r in rendered)
+    assert any(f'thing.age >= {expected_age}' in r for r in rendered)
+    assert len(specs) == 2

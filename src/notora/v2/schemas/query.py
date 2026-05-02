@@ -105,9 +105,12 @@ class PydanticFiltersSchema[ModelType: GenericBaseModel](BaseModel):
 
     def build_filter_specs(self, model: type[ModelType]) -> list[FilterSpec[ModelType]]:
         data = self.model_dump(exclude_unset=True, exclude_none=True)
+        sources: dict[str, PydanticFilterField[Any] | Filter] = (
+            self.filter_fields or self._annotated_filter_fields
+        )
         specs: list[FilterSpec[ModelType]] = []
         for field_name, value in data.items():
-            spec_def = self.filter_fields.get(field_name)
+            spec_def = sources.get(field_name)
             if spec_def is None:
                 continue
             specs.append(_build_one_filter_spec(spec_def, model, value, field_name))
@@ -134,7 +137,7 @@ class PydanticOrderBySchema[ModelType: GenericBaseModel](BaseModel):
 
 
 def _build_one_filter_spec[ModelType: GenericBaseModel](
-    spec_def: PydanticFilterField[ModelType],
+    spec_def: PydanticFilterField[ModelType] | Filter,
     model: type[ModelType],
     value: Any,
     field_name: str,

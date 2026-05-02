@@ -277,3 +277,35 @@ def test_pydantic_init_subclass_empty_cache_when_no_annotated_filters() -> None:
         }
 
     assert LegacyFilters._annotated_filter_fields == {}
+
+
+def test_mixing_legacy_dict_and_annotated_filter_raises() -> None:
+    with pytest.raises(TypeError, match='mixes legacy `filter_fields` ClassVar'):
+        class Mixed(PydanticFiltersSchema[Thing]):
+            name: Annotated[str | None, Filter(resolver=Thing.name)] = None
+            age: int | None = None
+            filter_fields: ClassVar[dict[str, PydanticFilterField[Any]]] = {
+                'age': PydanticFilterField(resolver=Thing.age),
+            }
+
+
+def test_mixing_via_inheritance_raises() -> None:
+    class LegacyParent(PydanticFiltersSchema[Thing]):
+        name: str | None = None
+        filter_fields: ClassVar[dict[str, PydanticFilterField[Any]]] = {
+            'name': PydanticFilterField(resolver=Thing.name),
+        }
+
+    with pytest.raises(TypeError, match='mixes legacy `filter_fields` ClassVar'):
+        class AnnotatedChild(LegacyParent):
+            age: Annotated[int | None, Filter(resolver=Thing.age)] = None
+
+
+def test_pure_annotated_inheritance_works() -> None:
+    class AnnotatedParent(PydanticFiltersSchema[Thing]):
+        name: Annotated[str | None, Filter(resolver=Thing.name)] = None
+
+    class AnnotatedChild(AnnotatedParent):
+        age: Annotated[int | None, Filter(resolver=Thing.age)] = None
+
+    assert set(AnnotatedChild._annotated_filter_fields) == {'name', 'age'}

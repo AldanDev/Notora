@@ -88,7 +88,20 @@ class PydanticFiltersSchema[ModelType: GenericBaseModel](BaseModel):
     @classmethod
     def __pydantic_init_subclass__(cls, **kwargs: Any) -> None:
         super().__pydantic_init_subclass__(**kwargs)
-        cls._annotated_filter_fields = _extract_annotated_filters(cls)
+        annotated = _extract_annotated_filters(cls)
+        legacy = cls.filter_fields  # resolves through MRO; sees inherited values
+
+        if legacy and annotated:
+            colliding = sorted(set(legacy) & set(annotated))
+            joined = ', '.join(colliding) if colliding else '<none — both sources non-empty>'
+            msg = (
+                f'{cls.__name__} mixes legacy `filter_fields` ClassVar and '
+                f'`Annotated[..., Filter(...)]` declarations — pick one style '
+                f'per schema. Overlapping fields: {joined}.'
+            )
+            raise TypeError(msg)
+
+        cls._annotated_filter_fields = annotated
 
     def build_filter_specs(self, model: type[ModelType]) -> list[FilterSpec[ModelType]]:
         data = self.model_dump(exclude_unset=True, exclude_none=True)

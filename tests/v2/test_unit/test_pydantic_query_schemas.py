@@ -323,3 +323,75 @@ def test_annotated_schema_builds_filter_specs() -> None:
     assert any("thing.name = 'alice'" in r for r in rendered)
     assert any(f'thing.age >= {expected_age}' in r for r in rendered)
     assert len(specs) == 2
+
+
+class ThingFiltersAnnotated(PydanticFiltersSchema[Thing]):
+    name: Annotated[str | None, Filter(resolver=Thing.name)] = None
+    age_gte: Annotated[int | None, Filter(resolver=Thing.age, operator='gte')] = None
+    owner_id: Annotated[UUID | None, Filter(resolver=Thing.owner_id)] = None
+    is_active: Annotated[bool | None, Filter(resolver=Thing.is_active)] = None
+    q: Annotated[
+        str | None,
+        Filter(predicate=lambda m, _op, v: or_(
+            m.name.ilike(f'%{v}%'),
+            m.owner_id.cast(String).ilike(f'%{v}%'),
+        )),
+    ] = None
+
+
+def test_annotated_unset_fields_produce_no_specs() -> None:
+    filters = ThingFiltersAnnotated()
+    assert filters.build_filter_specs(Thing) == []
+
+
+def test_annotated_none_values_are_excluded() -> None:
+    filters = ThingFiltersAnnotated(name=None, age_gte=None)
+    assert filters.build_filter_specs(Thing) == []
+
+
+def test_annotated_equality_field_produces_eq_clause() -> None:
+    filters = ThingFiltersAnnotated(name='foo')
+    specs = filters.build_filter_specs(Thing)
+    assert len(specs) == 1
+    assert "thing.name = 'foo'" in _render(specs[0])
+
+
+def test_annotated_operator_override_gte() -> None:
+    expected_age = 18
+    filters = ThingFiltersAnnotated(age_gte=expected_age)
+    specs = filters.build_filter_specs(Thing)
+    assert len(specs) == 1
+    assert f'thing.age >= {expected_age}' in _render(specs[0])
+
+
+def test_annotated_uuid_field_produces_eq_clause() -> None:
+    target = uuid4()
+    filters = ThingFiltersAnnotated(owner_id=target)
+    specs = filters.build_filter_specs(Thing)
+    assert len(specs) == 1
+    assert str(target) in _render(specs[0])
+
+
+def test_annotated_bool_false_still_produces_clause() -> None:
+    filters = ThingFiltersAnnotated(is_active=False)
+    specs = filters.build_filter_specs(Thing)
+    assert len(specs) == 1
+    assert 'thing.is_active = false' in _render(specs[0])
+
+
+def test_annotated_predicate_field() -> None:
+    filters = ThingFiltersAnnotated(q='sea')
+    specs = filters.build_filter_specs(Thing)
+    assert len(specs) == 1
+    rendered = _render(specs[0])
+    assert 'sea' in rendered
+    assert 'thing.name ILIKE' in rendered
+
+
+def test_annotated_callable_resolver() -> None:
+    class CallableResolverFilters(PydanticFiltersSchema[Thing]):
+        name: Annotated[str | None, Filter(resolver=lambda m: m.name)] = None
+
+    f = CallableResolverFilters(name='y')
+    specs = f.build_filter_specs(Thing)
+    assert "thing.name = 'y'" in _render(specs[0])

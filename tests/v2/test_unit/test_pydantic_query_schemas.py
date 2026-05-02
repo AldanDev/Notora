@@ -395,3 +395,30 @@ def test_annotated_callable_resolver() -> None:
     f = CallableResolverFilters(name='y')
     specs = f.build_filter_specs(Thing)
     assert "thing.name = 'y'" in _render(specs[0])
+
+
+def test_field_without_filter_metadata_is_skipped() -> None:
+    class WithControlField(PydanticFiltersSchema[Thing]):
+        name: Annotated[str | None, Filter(resolver=Thing.name)] = None
+        show_archived: bool = False
+
+    f = WithControlField(name='alice', show_archived=True)
+    specs = f.build_filter_specs(Thing)
+    assert len(specs) == 1
+    assert "thing.name = 'alice'" in _render(specs[0])
+
+
+def test_filter_metadata_stacks_with_pydantic_field() -> None:
+    class StackedFilters(PydanticFiltersSchema[Thing]):
+        name: Annotated[
+            str | None,
+            Field(description='Search by name', alias='n'),
+            Filter(resolver=Thing.name),
+        ] = None
+
+    # alias='n' — pydantic accepts the field under the aliased key,
+    # the underlying attribute is still `name` (which is what _annotated_filter_fields keys on).
+    f = StackedFilters.model_validate({'n': 'alice'})
+    specs = f.build_filter_specs(Thing)
+    assert len(specs) == 1
+    assert "thing.name = 'alice'" in _render(specs[0])

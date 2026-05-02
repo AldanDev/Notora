@@ -1,7 +1,8 @@
-from typing import Any, ClassVar, Literal, cast
+from typing import Annotated, Any, ClassVar, Literal, cast
 from uuid import UUID, uuid4
 
 import pytest
+from pydantic import BaseModel, Field
 from sqlalchemy import Boolean, Integer, String
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
@@ -11,10 +12,12 @@ from sqlalchemy.sql import ColumnElement, or_
 from notora.v2.models.base import GenericBaseModel
 from notora.v2.repositories.types import FilterSpec, OrderSpec
 from notora.v2.schemas.query import (
+    Filter,
     PydanticFilterField,
     PydanticFiltersSchema,
     PydanticOrderBySchema,
     PydanticSortField,
+    _extract_annotated_filters,  # noqa: PLC2701  (intentional: test of module-private helper)
 )
 
 
@@ -182,3 +185,263 @@ def test_resolver_can_be_callable() -> None:
     f = CallableResolverFilters(name='y')
     specs = f.build_filter_specs(Thing)
     assert "thing.name = 'y'" in _render(specs[0])
+
+
+def test_filter_constructs_with_resolver_only() -> None:
+    f = Filter(resolver=Thing.name)
+    assert f.resolver is Thing.name
+    assert f.predicate is None
+    assert f.operator == 'eq'
+
+
+def test_filter_constructs_with_predicate_only() -> None:
+    def pred(model: type[Thing], _op: str, value: str) -> ColumnElement[bool]:
+        return model.name == value
+
+    f = Filter(predicate=pred)
+    assert f.predicate is pred
+    assert f.resolver is None
+    assert f.operator == 'eq'
+
+
+def test_filter_operator_override() -> None:
+    f = Filter(resolver=Thing.age, operator='gte')
+    assert f.operator == 'gte'
+
+
+def test_filter_without_resolver_or_predicate_raises() -> None:
+    with pytest.raises(TypeError, match='exactly one of resolver= or predicate='):
+        Filter()
+
+
+def test_filter_with_both_resolver_and_predicate_raises() -> None:
+    def pred(model: type[Thing], _op: str, value: str) -> ColumnElement[bool]:
+        return model.name == value
+
+    with pytest.raises(TypeError, match='exactly one of resolver= or predicate='):
+        Filter(resolver=Thing.name, predicate=pred)
+
+
+def test_extract_annotated_filters_returns_empty_for_no_metadata() -> None:
+    class NoFilters(BaseModel):
+        name: str | None = None
+
+    assert _extract_annotated_filters(NoFilters) == {}
+
+
+def test_extract_annotated_filters_returns_one_per_field() -> None:
+    class WithFilter(BaseModel):
+        name: Annotated[str | None, Filter(resolver=Thing.name)] = None
+
+    out = _extract_annotated_filters(WithFilter)
+    assert set(out) == {'name'}
+    assert isinstance(out['name'], Filter)
+    assert out['name'].resolver is Thing.name
+
+
+def test_extract_annotated_filters_skips_non_filter_metadata() -> None:
+    class Mixed(BaseModel):
+        name: Annotated[str | None, Filter(resolver=Thing.name)] = Field(default=None, description='X')
+        plain: str | None = None
+
+    out = _extract_annotated_filters(Mixed)
+    assert set(out) == {'name'}
+
+
+def test_extract_annotated_filters_raises_on_multiple_filters_in_one_field() -> None:
+    with pytest.raises(TypeError, match='multiple Filter'):
+        class Conflict(BaseModel):
+            name: Annotated[
+                str | None,
+                Filter(resolver=Thing.name),
+                Filter(predicate=lambda m, _op, v: m.name == v),
+            ] = None
+
+        _extract_annotated_filters(Conflict)
+
+
+def test_pydantic_init_subclass_caches_annotated_filters() -> None:
+    class FooFilters(PydanticFiltersSchema[Thing]):
+        name: Annotated[str | None, Filter(resolver=Thing.name)] = None
+        age: Annotated[int | None, Filter(resolver=Thing.age, operator='gte')] = None
+
+    assert set(FooFilters._annotated_filter_fields) == {'name', 'age'}
+    assert FooFilters._annotated_filter_fields['age'].operator == 'gte'
+
+
+def test_pydantic_init_subclass_empty_cache_when_no_annotated_filters() -> None:
+    class LegacyFilters(PydanticFiltersSchema[Thing]):
+        name: str | None = None
+        filter_fields: ClassVar[dict[str, PydanticFilterField[Any]]] = {
+            'name': PydanticFilterField(resolver=Thing.name),
+        }
+
+    assert LegacyFilters._annotated_filter_fields == {}
+
+
+def test_mixing_legacy_dict_and_annotated_filter_raises() -> None:
+    with pytest.raises(TypeError) as exc_info:
+
+        class Mixed(PydanticFiltersSchema[Thing]):
+            name: Annotated[str | None, Filter(resolver=Thing.name)] = None
+            age: int | None = None
+            filter_fields: ClassVar[dict[str, PydanticFilterField[Any]]] = {
+                'age': PydanticFilterField(resolver=Thing.age),
+            }
+
+    msg = str(exc_info.value)
+    assert 'mixes legacy `filter_fields` ClassVar' in msg
+    # Disjoint sets — message should list both sources separately, not say
+    # "Overlapping fields: <none>".
+    assert "Annotated fields: ['name']" in msg
+    assert "filter_fields keys: ['age']" in msg
+
+
+def test_mixing_with_overlapping_field_shows_overlap() -> None:
+    with pytest.raises(TypeError) as exc_info:
+
+        class OverlapMixed(PydanticFiltersSchema[Thing]):
+            name: Annotated[str | None, Filter(resolver=Thing.name)] = None
+            filter_fields: ClassVar[dict[str, PydanticFilterField[Any]]] = {
+                'name': PydanticFilterField(resolver=Thing.name),
+            }
+
+    msg = str(exc_info.value)
+    assert 'mixes legacy `filter_fields` ClassVar' in msg
+    assert 'Overlapping fields: name' in msg
+
+
+def test_mixing_via_inheritance_raises() -> None:
+    class LegacyParent(PydanticFiltersSchema[Thing]):
+        name: str | None = None
+        filter_fields: ClassVar[dict[str, PydanticFilterField[Any]]] = {
+            'name': PydanticFilterField(resolver=Thing.name),
+        }
+
+    with pytest.raises(TypeError, match='mixes legacy `filter_fields` ClassVar'):
+        class AnnotatedChild(LegacyParent):
+            age: Annotated[int | None, Filter(resolver=Thing.age)] = None
+
+
+def test_pure_annotated_inheritance_works() -> None:
+    class AnnotatedParent(PydanticFiltersSchema[Thing]):
+        name: Annotated[str | None, Filter(resolver=Thing.name)] = None
+
+    class AnnotatedChild(AnnotatedParent):
+        age: Annotated[int | None, Filter(resolver=Thing.age)] = None
+
+    assert set(AnnotatedChild._annotated_filter_fields) == {'name', 'age'}
+
+
+def test_annotated_schema_builds_filter_specs() -> None:
+    class FooFilters(PydanticFiltersSchema[Thing]):
+        name: Annotated[str | None, Filter(resolver=Thing.name)] = None
+        age_gte: Annotated[int | None, Filter(resolver=Thing.age, operator='gte')] = None
+
+    expected_age = 18
+    expected_spec_count = 2
+    filters = FooFilters(name='alice', age_gte=expected_age)
+    specs = filters.build_filter_specs(Thing)
+    rendered = sorted(_render(s) for s in specs)
+    assert any("thing.name = 'alice'" in r for r in rendered)
+    assert any(f'thing.age >= {expected_age}' in r for r in rendered)
+    assert len(specs) == expected_spec_count
+
+
+class ThingFiltersAnnotated(PydanticFiltersSchema[Thing]):
+    name: Annotated[str | None, Filter(resolver=Thing.name)] = None
+    age_gte: Annotated[int | None, Filter(resolver=Thing.age, operator='gte')] = None
+    owner_id: Annotated[UUID | None, Filter(resolver=Thing.owner_id)] = None
+    is_active: Annotated[bool | None, Filter(resolver=Thing.is_active)] = None
+    q: Annotated[
+        str | None,
+        Filter(predicate=lambda m, _op, v: or_(
+            m.name.ilike(f'%{v}%'),
+            m.owner_id.cast(String).ilike(f'%{v}%'),
+        )),
+    ] = None
+
+
+def test_annotated_unset_fields_produce_no_specs() -> None:
+    filters = ThingFiltersAnnotated()
+    assert filters.build_filter_specs(Thing) == []
+
+
+def test_annotated_none_values_are_excluded() -> None:
+    filters = ThingFiltersAnnotated(name=None, age_gte=None)
+    assert filters.build_filter_specs(Thing) == []
+
+
+def test_annotated_equality_field_produces_eq_clause() -> None:
+    filters = ThingFiltersAnnotated(name='foo')
+    specs = filters.build_filter_specs(Thing)
+    assert len(specs) == 1
+    assert "thing.name = 'foo'" in _render(specs[0])
+
+
+def test_annotated_operator_override_gte() -> None:
+    expected_age = 18
+    filters = ThingFiltersAnnotated(age_gte=expected_age)
+    specs = filters.build_filter_specs(Thing)
+    assert len(specs) == 1
+    assert f'thing.age >= {expected_age}' in _render(specs[0])
+
+
+def test_annotated_uuid_field_produces_eq_clause() -> None:
+    target = uuid4()
+    filters = ThingFiltersAnnotated(owner_id=target)
+    specs = filters.build_filter_specs(Thing)
+    assert len(specs) == 1
+    assert str(target) in _render(specs[0])
+
+
+def test_annotated_bool_false_still_produces_clause() -> None:
+    filters = ThingFiltersAnnotated(is_active=False)
+    specs = filters.build_filter_specs(Thing)
+    assert len(specs) == 1
+    assert 'thing.is_active = false' in _render(specs[0])
+
+
+def test_annotated_predicate_field() -> None:
+    filters = ThingFiltersAnnotated(q='sea')
+    specs = filters.build_filter_specs(Thing)
+    assert len(specs) == 1
+    rendered = _render(specs[0])
+    assert 'sea' in rendered
+    assert 'thing.name ILIKE' in rendered
+
+
+def test_annotated_callable_resolver() -> None:
+    class CallableResolverFilters(PydanticFiltersSchema[Thing]):
+        name: Annotated[str | None, Filter(resolver=lambda m: m.name)] = None
+
+    f = CallableResolverFilters(name='y')
+    specs = f.build_filter_specs(Thing)
+    assert "thing.name = 'y'" in _render(specs[0])
+
+
+def test_field_without_filter_metadata_is_skipped() -> None:
+    class WithControlField(PydanticFiltersSchema[Thing]):
+        name: Annotated[str | None, Filter(resolver=Thing.name)] = None
+        show_archived: bool = False
+
+    f = WithControlField(name='alice', show_archived=True)
+    specs = f.build_filter_specs(Thing)
+    assert len(specs) == 1
+    assert "thing.name = 'alice'" in _render(specs[0])
+
+
+def test_filter_metadata_stacks_with_pydantic_field() -> None:
+    class StackedFilters(PydanticFiltersSchema[Thing]):
+        name: Annotated[
+            str | None,
+            Field(description='Search by name', alias='n'),
+            Filter(resolver=Thing.name),
+        ] = None
+
+    # alias='n' — pydantic accepts the field under the aliased key,
+    # the underlying attribute is still `name` (which is what _annotated_filter_fields keys on).
+    f = StackedFilters.model_validate({'n': 'alice'})
+    specs = f.build_filter_specs(Thing)
+    assert len(specs) == 1
+    assert "thing.name = 'alice'" in _render(specs[0])

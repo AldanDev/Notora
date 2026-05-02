@@ -6,6 +6,7 @@ from notora.v2.schemas.base import (
     PaginationMetaSchema,
 )
 from notora.v2.schemas.query import (
+    Filter,
     PydanticFilterField,
     PydanticFiltersSchema,
     PydanticOrderBySchema,
@@ -16,6 +17,7 @@ __all__ = [
     'BaseRequestSchema',
     'BaseResponseSchema',
     'ClientMeta',
+    'Filter',
     'PaginatedResponseSchema',
     'PaginationMetaSchema',
     'PydanticFilterField',

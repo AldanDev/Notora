@@ -152,3 +152,35 @@ service.
 class UserService(RepositoryService[UUID, User, UserSchema]):
     updated_by_attribute = "updated_by_id"
 ```
+
+## Filter schema with Annotated metadata (pydantic path)
+
+Single source of truth per field — type and SQL spec live together:
+
+```python
+from typing import Annotated, ClassVar
+from uuid import UUID
+
+from notora.v2 import Filter, PydanticFiltersSchema
+
+
+class AdminFooFilters(PydanticFiltersSchema[Foo]):
+    name: Annotated[str | None, Filter(resolver=Foo.name)] = None
+    age_gte: Annotated[int | None, Filter(resolver=Foo.age, operator='gte')] = None
+    owner_id: Annotated[UUID | None, Filter(resolver=Foo.owner_id)] = None
+    # Bare pydantic field (no Filter) is skipped at spec-build time —
+    # use this for control flags that aren't SQL filters:
+    show_archived: bool = False
+```
+
+Same `make_list_params_dependency` wiring as the legacy `filter_fields` style:
+
+```python
+list_deps = make_list_params_dependency(
+    model=Foo,
+    filters_schema=AdminFooFilters,
+    order_schema=AdminFooOrdering,
+)
+```
+
+A schema cannot mix `Annotated[..., Filter(...)]` and a `filter_fields: ClassVar[...]` dict — `__pydantic_init_subclass__` raises `TypeError` at class-definition time if it sees both.

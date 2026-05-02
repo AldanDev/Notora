@@ -83,6 +83,12 @@ class PydanticFiltersSchema[ModelType: GenericBaseModel](BaseModel):
     model_config = ConfigDict(from_attributes=True, extra='forbid')
 
     filter_fields: ClassVar[dict[str, PydanticFilterField[Any]]] = {}
+    _annotated_filter_fields: ClassVar[dict[str, Filter]] = {}
+
+    @classmethod
+    def __pydantic_init_subclass__(cls, **kwargs: Any) -> None:
+        super().__pydantic_init_subclass__(**kwargs)
+        cls._annotated_filter_fields = _extract_annotated_filters(cls)
 
     def build_filter_specs(self, model: type[ModelType]) -> list[FilterSpec[ModelType]]:
         data = self.model_dump(exclude_unset=True, exclude_none=True)

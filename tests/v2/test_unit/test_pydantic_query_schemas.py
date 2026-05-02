@@ -258,3 +258,22 @@ def test_extract_annotated_filters_raises_on_multiple_filters_in_one_field() -> 
             ] = None
 
         _extract_annotated_filters(Conflict)
+
+
+def test_pydantic_init_subclass_caches_annotated_filters() -> None:
+    class FooFilters(PydanticFiltersSchema[Thing]):
+        name: Annotated[str | None, Filter(resolver=Thing.name)] = None
+        age: Annotated[int | None, Filter(resolver=Thing.age, operator='gte')] = None
+
+    assert set(FooFilters._annotated_filter_fields) == {'name', 'age'}
+    assert FooFilters._annotated_filter_fields['age'].operator == 'gte'
+
+
+def test_pydantic_init_subclass_empty_cache_when_no_annotated_filters() -> None:
+    class LegacyFilters(PydanticFiltersSchema[Thing]):
+        name: str | None = None
+        filter_fields: ClassVar[dict[str, PydanticFilterField[Any]]] = {
+            'name': PydanticFilterField(resolver=Thing.name),
+        }
+
+    assert LegacyFilters._annotated_filter_fields == {}

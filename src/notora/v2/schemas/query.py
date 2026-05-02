@@ -58,6 +58,27 @@ class PydanticSortField[ModelType: GenericBaseModel]:
     resolver: SortResolver[ModelType]
 
 
+def _extract_annotated_filters(cls: type[BaseModel]) -> dict[str, Filter]:
+    """Read Filter(...) instances out of each field's `Annotated[...]` metadata.
+
+    Pydantic v2 stores third-party Annotated metadata in `model_fields[name].metadata`.
+    Filter is third-party (not a `FieldInfo`), so it lives there untouched.
+    """
+    out: dict[str, Filter] = {}
+    for name, field_info in cls.model_fields.items():
+        filters = [m for m in field_info.metadata if isinstance(m, Filter)]
+        if not filters:
+            continue
+        if len(filters) > 1:
+            msg = (
+                f'{cls.__name__}.{name}: multiple Filter(...) entries in '
+                f'Annotated[...] — only one is allowed per field.'
+            )
+            raise TypeError(msg)
+        out[name] = filters[0]
+    return out
+
+
 class PydanticFiltersSchema[ModelType: GenericBaseModel](BaseModel):
     model_config = ConfigDict(from_attributes=True, extra='forbid')
 

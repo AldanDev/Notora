@@ -1,7 +1,8 @@
-from typing import Any, ClassVar, Literal, cast
+from typing import Annotated, Any, ClassVar, Literal, cast
 from uuid import UUID, uuid4
 
 import pytest
+from pydantic import BaseModel, Field
 from sqlalchemy import Boolean, Integer, String
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
@@ -16,6 +17,7 @@ from notora.v2.schemas.query import (
     PydanticFiltersSchema,
     PydanticOrderBySchema,
     PydanticSortField,
+    _extract_annotated_filters,
 )
 
 
@@ -218,3 +220,41 @@ def test_filter_with_both_resolver_and_predicate_raises() -> None:
 
     with pytest.raises(TypeError, match='exactly one of resolver= or predicate='):
         Filter(resolver=Thing.name, predicate=pred)
+
+
+def test_extract_annotated_filters_returns_empty_for_no_metadata() -> None:
+    class NoFilters(BaseModel):
+        name: str | None = None
+
+    assert _extract_annotated_filters(NoFilters) == {}
+
+
+def test_extract_annotated_filters_returns_one_per_field() -> None:
+    class WithFilter(BaseModel):
+        name: Annotated[str | None, Filter(resolver=Thing.name)] = None
+
+    out = _extract_annotated_filters(WithFilter)
+    assert set(out) == {'name'}
+    assert isinstance(out['name'], Filter)
+    assert out['name'].resolver is Thing.name
+
+
+def test_extract_annotated_filters_skips_non_filter_metadata() -> None:
+    class Mixed(BaseModel):
+        name: Annotated[str | None, Filter(resolver=Thing.name)] = Field(default=None, description='X')
+        plain: str | None = None
+
+    out = _extract_annotated_filters(Mixed)
+    assert set(out) == {'name'}
+
+
+def test_extract_annotated_filters_raises_on_multiple_filters_in_one_field() -> None:
+    with pytest.raises(TypeError, match='multiple Filter'):
+        class Conflict(BaseModel):
+            name: Annotated[
+                str | None,
+                Filter(resolver=Thing.name),
+                Filter(predicate=lambda m, _op, v: m.name == v),
+            ] = None
+
+        _extract_annotated_filters(Conflict)

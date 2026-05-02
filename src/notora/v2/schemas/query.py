@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any, ClassVar, Literal
 
@@ -105,7 +106,8 @@ class PydanticFiltersSchema[ModelType: GenericBaseModel](BaseModel):
 
     def build_filter_specs(self, model: type[ModelType]) -> list[FilterSpec[ModelType]]:
         data = self.model_dump(exclude_unset=True, exclude_none=True)
-        sources: dict[str, PydanticFilterField[Any] | Filter] = (
+        # Mapping is read-only / covariant; either dict literal type satisfies it.
+        sources: Mapping[str, PydanticFilterField[Any] | Filter] = (
             self.filter_fields or self._annotated_filter_fields
         )
         specs: list[FilterSpec[ModelType]] = []

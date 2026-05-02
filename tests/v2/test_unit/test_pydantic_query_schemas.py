@@ -17,7 +17,7 @@ from notora.v2.schemas.query import (
     PydanticFiltersSchema,
     PydanticOrderBySchema,
     PydanticSortField,
-    _extract_annotated_filters,
+    _extract_annotated_filters,  # noqa: PLC2701  (intentional: test of module-private helper)
 )
 
 
@@ -195,7 +195,7 @@ def test_filter_constructs_with_resolver_only() -> None:
 
 
 def test_filter_constructs_with_predicate_only() -> None:
-    def pred(model: type[Thing], _op: str, value: str) -> ColumnElement[bool]:  # noqa: ARG001
+    def pred(model: type[Thing], _op: str, value: str) -> ColumnElement[bool]:
         return model.name == value
 
     f = Filter(predicate=pred)
@@ -215,7 +215,7 @@ def test_filter_without_resolver_or_predicate_raises() -> None:
 
 
 def test_filter_with_both_resolver_and_predicate_raises() -> None:
-    def pred(model: type[Thing], _op: str, value: str) -> ColumnElement[bool]:  # noqa: ARG001
+    def pred(model: type[Thing], _op: str, value: str) -> ColumnElement[bool]:
         return model.name == value
 
     with pytest.raises(TypeError, match='exactly one of resolver= or predicate='):
@@ -317,12 +317,13 @@ def test_annotated_schema_builds_filter_specs() -> None:
         age_gte: Annotated[int | None, Filter(resolver=Thing.age, operator='gte')] = None
 
     expected_age = 18
+    expected_spec_count = 2
     filters = FooFilters(name='alice', age_gte=expected_age)
     specs = filters.build_filter_specs(Thing)
     rendered = sorted(_render(s) for s in specs)
     assert any("thing.name = 'alice'" in r for r in rendered)
     assert any(f'thing.age >= {expected_age}' in r for r in rendered)
-    assert len(specs) == 2
+    assert len(specs) == expected_spec_count
 
 
 class ThingFiltersAnnotated(PydanticFiltersSchema[Thing]):

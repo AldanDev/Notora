@@ -11,6 +11,7 @@ from sqlalchemy.sql import ColumnElement, or_
 from notora.v2.models.base import GenericBaseModel
 from notora.v2.repositories.types import FilterSpec, OrderSpec
 from notora.v2.schemas.query import (
+    Filter,
     PydanticFilterField,
     PydanticFiltersSchema,
     PydanticOrderBySchema,
@@ -182,3 +183,25 @@ def test_resolver_can_be_callable() -> None:
     f = CallableResolverFilters(name='y')
     specs = f.build_filter_specs(Thing)
     assert "thing.name = 'y'" in _render(specs[0])
+
+
+def test_filter_constructs_with_resolver_only() -> None:
+    f = Filter(resolver=Thing.name)
+    assert f.resolver is Thing.name
+    assert f.predicate is None
+    assert f.operator == 'eq'
+
+
+def test_filter_constructs_with_predicate_only() -> None:
+    def pred(model: type[Thing], _op: str, value: str) -> ColumnElement[bool]:  # noqa: ARG001
+        return model.name == value
+
+    f = Filter(predicate=pred)
+    assert f.predicate is pred
+    assert f.resolver is None
+    assert f.operator == 'eq'
+
+
+def test_filter_operator_override() -> None:
+    f = Filter(resolver=Thing.age, operator='gte')
+    assert f.operator == 'gte'

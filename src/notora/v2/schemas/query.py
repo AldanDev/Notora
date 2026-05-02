@@ -16,6 +16,7 @@ from notora.v2.repositories.query_dsl import (
 from notora.v2.repositories.types import FilterSpec, OrderSpec
 
 __all__ = [
+    'Filter',
     'PydanticFilterField',
     'PydanticFiltersSchema',
     'PydanticOrderBySchema',
@@ -27,6 +28,20 @@ __all__ = [
 class PydanticFilterField[ModelType: GenericBaseModel]:
     resolver: FilterResolver[ModelType] | None = None
     predicate: FilterPredicate[ModelType] | None = None
+    operator: FilterOperator = 'eq'
+
+
+@dataclass(frozen=True, slots=True)
+class Filter:
+    """Annotated-metadata allowlist entry for `PydanticFiltersSchema` fields.
+
+    Use inside `Annotated[T, Filter(...)]`. Holds the same shape as
+    `PydanticFilterField` (`resolver` / `predicate` / `operator`); see the
+    Filter validation in `__post_init__`.
+    """
+
+    resolver: FilterResolver[Any] | None = None
+    predicate: FilterPredicate[Any] | None = None
     operator: FilterOperator = 'eq'
 
 

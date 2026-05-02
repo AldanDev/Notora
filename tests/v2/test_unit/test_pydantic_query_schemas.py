@@ -205,3 +205,16 @@ def test_filter_constructs_with_predicate_only() -> None:
 def test_filter_operator_override() -> None:
     f = Filter(resolver=Thing.age, operator='gte')
     assert f.operator == 'gte'
+
+
+def test_filter_without_resolver_or_predicate_raises() -> None:
+    with pytest.raises(TypeError, match='exactly one of resolver= or predicate='):
+        Filter()
+
+
+def test_filter_with_both_resolver_and_predicate_raises() -> None:
+    def pred(model: type[Thing], _op: str, value: str) -> ColumnElement[bool]:  # noqa: ARG001
+        return model.name == value
+
+    with pytest.raises(TypeError, match='exactly one of resolver= or predicate='):
+        Filter(resolver=Thing.name, predicate=pred)

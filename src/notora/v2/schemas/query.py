@@ -44,6 +44,14 @@ class Filter:
     predicate: FilterPredicate[Any] | None = None
     operator: FilterOperator = 'eq'
 
+    def __post_init__(self) -> None:
+        if (self.resolver is None) == (self.predicate is None):
+            msg = (
+                'Filter requires exactly one of resolver= or predicate= '
+                '(got both or neither).'
+            )
+            raise TypeError(msg)
+
 
 @dataclass(frozen=True, slots=True)
 class PydanticSortField[ModelType: GenericBaseModel]:

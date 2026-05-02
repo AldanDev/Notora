@@ -13,6 +13,7 @@ Terminology for filtering, ordering, and pagination. Use this to disambiguate th
 | `FilterField[M]` | Dataclass | DSL allowlist entry: resolver + allowed operators + value type. Used with `build_query_params`. |
 | `FilterToken` | Dataclass | Parsed `field:op:value` from a DSL query string. |
 | `PydanticFilterField[M]` | Dataclass | Pydantic-schema allowlist entry: resolver + predicate + fixed operator. Used with `PydanticFiltersSchema`. |
+| `Filter` | Dataclass | Annotated-metadata allowlist entry: resolver + predicate + fixed operator. Used inside `Annotated[T, Filter(...)]` on `PydanticFiltersSchema` fields. |
 
 ## Order terms
 
@@ -107,6 +108,10 @@ class ThingFilters(PydanticFiltersSchema[Thing]):
     # This mutates the BASE class's dict and leaks to all other subclasses.
 ```
 
+**On the Annotated path this footgun does not apply.** `Annotated[T, Filter(...)]` declarations live on each pydantic field, not in a shared mutable ClassVar — there is nothing to leak across subclasses. Use the Annotated form when adding new schemas to sidestep this entirely.
+
 **Pydantic field without `filter_fields` entry = silent skip:** `build_filter_specs` iterates `model_dump(exclude_unset=True, exclude_none=True)` and skips any field name that's not in `filter_fields`. Pydantic accepts the HTTP value (so no HTTP 422), but the filter has NO effect on the SQL query. This is by design — it lets a schema carry non-filter fields (mode toggles, pagination hints, etc.) alongside the declared filters — but it means forgetting to register a field produces a "ghost filter" that silently does nothing.
 
 Mitigation: when authoring a filter schema, add every pydantic field to `filter_fields`. If you want a non-filter field in the same schema, name it distinctly (e.g. prefix with `_`) and document it.
+
+**On the Annotated path the failure mode shifts but does not disappear.** A pydantic field without `Filter(...)` metadata is now an explicit non-filter declaration (e.g. `show_archived: bool = False` for control flags) — `build_filter_specs` skips it by design. The "registered the filter, forgot to wire SQL" mistake is gone because there is one source of truth, not two; but the "added a field without thinking about whether it should be a filter" possibility remains. When in doubt, declare `Annotated[..., Filter(...)]` explicitly.

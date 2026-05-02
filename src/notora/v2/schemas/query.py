@@ -39,6 +39,15 @@ class Filter:
     Use inside `Annotated[T, Filter(...)]`. Holds the same shape as
     `PydanticFilterField` (`resolver` / `predicate` / `operator`); see the
     Filter validation in `__post_init__`.
+
+    Intentionally not generic over a `ModelType`. The schema's `ModelType`
+    parameter (`PydanticFiltersSchema[Thing]`) is the source of truth — adding
+    `Filter[ModelType]` would force every `Annotated[...]` site to repeat the
+    type argument with little payoff. As a result, `resolver` and `predicate`
+    are typed against an unbound `Any`-model: a mismatch such as
+    `Filter(resolver=OtherModel.x)` inside `PydanticFiltersSchema[Thing]` is
+    not caught by the type checker and surfaces only at runtime in
+    `build_filter_specs(model)`.
     """
 
     resolver: FilterResolver[Any] | None = None

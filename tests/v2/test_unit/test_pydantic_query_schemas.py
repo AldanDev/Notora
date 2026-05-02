@@ -280,13 +280,35 @@ def test_pydantic_init_subclass_empty_cache_when_no_annotated_filters() -> None:
 
 
 def test_mixing_legacy_dict_and_annotated_filter_raises() -> None:
-    with pytest.raises(TypeError, match='mixes legacy `filter_fields` ClassVar'):
+    with pytest.raises(TypeError) as exc_info:
+
         class Mixed(PydanticFiltersSchema[Thing]):
             name: Annotated[str | None, Filter(resolver=Thing.name)] = None
             age: int | None = None
             filter_fields: ClassVar[dict[str, PydanticFilterField[Any]]] = {
                 'age': PydanticFilterField(resolver=Thing.age),
             }
+
+    msg = str(exc_info.value)
+    assert 'mixes legacy `filter_fields` ClassVar' in msg
+    # Disjoint sets — message should list both sources separately, not say
+    # "Overlapping fields: <none>".
+    assert "Annotated fields: ['name']" in msg
+    assert "filter_fields keys: ['age']" in msg
+
+
+def test_mixing_with_overlapping_field_shows_overlap() -> None:
+    with pytest.raises(TypeError) as exc_info:
+
+        class OverlapMixed(PydanticFiltersSchema[Thing]):
+            name: Annotated[str | None, Filter(resolver=Thing.name)] = None
+            filter_fields: ClassVar[dict[str, PydanticFilterField[Any]]] = {
+                'name': PydanticFilterField(resolver=Thing.name),
+            }
+
+    msg = str(exc_info.value)
+    assert 'mixes legacy `filter_fields` ClassVar' in msg
+    assert 'Overlapping fields: name' in msg
 
 
 def test_mixing_via_inheritance_raises() -> None:

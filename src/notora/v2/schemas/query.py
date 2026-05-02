@@ -94,11 +94,17 @@ class PydanticFiltersSchema[ModelType: GenericBaseModel](BaseModel):
 
         if legacy and annotated:
             colliding = sorted(set(legacy) & set(annotated))
-            joined = ', '.join(colliding) if colliding else '<none — both sources non-empty>'
+            if colliding:
+                detail = f'Overlapping fields: {", ".join(colliding)}.'
+            else:
+                detail = (
+                    f'Annotated fields: {sorted(annotated)}; '
+                    f'filter_fields keys: {sorted(legacy)}.'
+                )
             msg = (
                 f'{cls.__name__} mixes legacy `filter_fields` ClassVar and '
                 f'`Annotated[..., Filter(...)]` declarations — pick one style '
-                f'per schema. Overlapping fields: {joined}.'
+                f'per schema. {detail}'
             )
             raise TypeError(msg)
 

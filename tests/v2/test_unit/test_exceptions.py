@@ -59,7 +59,7 @@ def test_already_exists_error_can_be_raised_and_caught() -> None:
         raise AlreadyExistsError(msg)
 
 def test_not_found_error_entity_id_none_by_default() -> None:
-    err = NotFoundError('not found')
+    err: NotFoundError[None] = NotFoundError('not found')
     assert err.entity_id is None
 
 def test_not_found_error_entity_id_stored() -> None:
@@ -72,7 +72,7 @@ def test_not_found_error_entity_id_uuid() -> None:
     assert err.entity_id == uid
 
 def test_not_found_error_message_preserved() -> None:
-    err = NotFoundError('Resource not found.')
+    err: NotFoundError[None] = NotFoundError('Resource not found.')
     assert str(err) == 'Resource not found.'
 
 def test_not_found_error_is_exception() -> None:
@@ -84,5 +84,5 @@ def test_not_found_error_can_be_raised_and_caught() -> None:
         raise NotFoundError(msg)
 
 def test_not_found_error_no_positional_args() -> None:
-    err = NotFoundError()
+    err: NotFoundError[None] = NotFoundError()
     assert err.entity_id is None

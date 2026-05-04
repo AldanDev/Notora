@@ -183,7 +183,7 @@ def test_resolve_to_column_callable_resolver_called_with_model() -> None:
 
 def test_build_filter_clauses_single_eq_clause() -> None:
     tokens = [FilterToken(field='name', operator='eq', raw_value='alice')]
-    fields = {'name': FilterField(resolver=SampleModel.name, value_type=str)}
+    fields: dict[str, FilterField[SampleModel]] = {'name': FilterField(resolver=SampleModel.name, value_type=str)}
     clauses = build_filter_clauses(tokens, model=SampleModel, fields=fields)
     assert len(clauses) == 1
     assert "sample_model.name = 'alice'" in _render(clauses[0])
@@ -195,7 +195,7 @@ def test_build_filter_clauses_unknown_field_raises() -> None:
 
 def test_build_filter_clauses_disallowed_operator_raises() -> None:
     tokens = [FilterToken(field='name', operator='gt', raw_value='5')]
-    fields = {'name': FilterField(resolver=SampleModel.name, operators=frozenset({'eq'}))}
+    fields: dict[str, FilterField[SampleModel]] = {'name': FilterField(resolver=SampleModel.name, operators=frozenset({'eq'}))}
     with pytest.raises(ValueError, match='Operator'):
         build_filter_clauses(tokens, model=SampleModel, fields=fields)
 
@@ -210,7 +210,7 @@ def test_build_filter_clauses_predicate_field() -> None:
 
 def test_build_filter_clauses_field_without_resolver_or_predicate_raises() -> None:
     tokens = [FilterToken(field='name', operator='eq', raw_value='x')]
-    fields = {'name': FilterField()}
+    fields: dict[str, FilterField[SampleModel]] = {'name': FilterField()}
     with pytest.raises(ValueError, match='resolver or predicate'):
         build_filter_clauses(tokens, model=SampleModel, fields=fields)
 
@@ -220,38 +220,38 @@ def test_build_filter_clauses_empty_tokens_returns_empty() -> None:
 
 def test_build_filter_clauses_isnull_no_value() -> None:
     tokens = [FilterToken(field='name', operator='isnull', raw_value=None)]
-    fields = {'name': FilterField(resolver=SampleModel.name)}
+    fields: dict[str, FilterField[SampleModel]] = {'name': FilterField(resolver=SampleModel.name)}
     clauses = build_filter_clauses(tokens, model=SampleModel, fields=fields)
     assert 'IS NULL' in _render(clauses[0])
 
 def test_build_filter_clauses_in_operator_requires_value() -> None:
     tokens = [FilterToken(field='name', operator='in', raw_value=None)]
-    fields = {'name': FilterField(resolver=SampleModel.name)}
+    fields: dict[str, FilterField[SampleModel]] = {'name': FilterField(resolver=SampleModel.name)}
     with pytest.raises(ValueError, match='requires a value'):
         build_filter_clauses(tokens, model=SampleModel, fields=fields)
 
 def test_build_filter_clauses_non_isnull_without_value_raises() -> None:
     tokens = [FilterToken(field='name', operator='eq', raw_value=None)]
-    fields = {'name': FilterField(resolver=SampleModel.name)}
+    fields: dict[str, FilterField[SampleModel]] = {'name': FilterField(resolver=SampleModel.name)}
     with pytest.raises(ValueError, match='requires a value'):
         build_filter_clauses(tokens, model=SampleModel, fields=fields)
 
 def test_build_filter_clauses_callable_resolver_in_field() -> None:
     tokens = [FilterToken(field='name', operator='eq', raw_value='x')]
-    fields = {'name': FilterField(resolver=lambda m: m.name, value_type=str)}
+    fields: dict[str, FilterField[SampleModel]] = {'name': FilterField(resolver=lambda m: m.name, value_type=str)}
     clauses = build_filter_clauses(tokens, model=SampleModel, fields=fields)
     assert "sample_model.name = 'x'" in _render(clauses[0])
 
 def test_build_sort_clauses_ascending() -> None:
     tokens = [SortToken(field='name', direction='asc')]
-    fields = {'name': SortField(resolver=SampleModel.name)}
+    fields: dict[str, SortField[SampleModel]] = {'name': SortField(resolver=SampleModel.name)}
     clauses = build_sort_clauses(tokens, model=SampleModel, fields=fields)
     assert len(clauses) == 1
     assert 'ASC' in _render(clauses[0])
 
 def test_build_sort_clauses_descending() -> None:
     tokens = [SortToken(field='score', direction='desc')]
-    fields = {'score': SortField(resolver=SampleModel.score)}
+    fields: dict[str, SortField[SampleModel]] = {'score': SortField(resolver=SampleModel.score)}
     clauses = build_sort_clauses(tokens, model=SampleModel, fields=fields)
     assert 'DESC' in _render(clauses[0])
 
@@ -266,7 +266,7 @@ def test_build_sort_clauses_empty_tokens_returns_empty() -> None:
 
 def test_build_sort_clauses_callable_resolver() -> None:
     tokens = [SortToken(field='name', direction='asc')]
-    fields = {'name': SortField(resolver=lambda m: m.name)}
+    fields: dict[str, SortField[SampleModel]] = {'name': SortField(resolver=lambda m: m.name)}
     clauses = build_sort_clauses(tokens, model=SampleModel, fields=fields)
     assert 'sample_model.name' in _render(clauses[0])
 
@@ -275,7 +275,7 @@ def test_build_sort_clauses_multiple_tokens() -> None:
         SortToken(field='name', direction='asc'),
         SortToken(field='score', direction='desc'),
     ]
-    fields = {
+    fields: dict[str, SortField[SampleModel]] = {
         'name': SortField(resolver=SampleModel.name),
         'score': SortField(resolver=SampleModel.score),
     }

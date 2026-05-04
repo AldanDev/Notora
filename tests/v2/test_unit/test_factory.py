@@ -22,17 +22,17 @@ class _WidgetSchema(BaseResponseSchema):
     pass
 
 def test_build_repository_returns_standard_repo_by_default() -> None:
-    repo = build_repository(_Widget)
+    repo = build_repository(_Widget)  # type: ignore[var-annotated]
     assert isinstance(repo, Repository)
     assert not isinstance(repo, SoftDeleteRepository)
 
 def test_build_repository_soft_delete_flag_returns_soft_delete_repo() -> None:
-    repo = build_repository(_Widget, soft_delete=True)
+    repo = build_repository(_Widget, soft_delete=True)  # type: ignore[var-annotated]
     assert isinstance(repo, SoftDeleteRepository)
 
 def test_build_repository_config_is_applied() -> None:
     config = RepoConfig[_Widget](default_limit=_DEFAULT_LIMIT)
-    repo = build_repository(_Widget, config=config)
+    repo = build_repository(_Widget, config=config)  # type: ignore[var-annotated]
     assert repo.default_limit == _DEFAULT_LIMIT
 
 def test_build_repository_custom_repo_class_used() -> None:
@@ -43,26 +43,26 @@ def test_build_repository_custom_repo_class_used() -> None:
     assert isinstance(repo, _CustomRepo)
 
 def test_build_repository_model_attribute_set() -> None:
-    repo = build_repository(_Widget)
+    repo = build_repository(_Widget)  # type: ignore[var-annotated]
     assert repo.model is _Widget
 
 def test_build_service_returns_repository_service_by_default() -> None:
-    svc = build_service(_Widget)
+    svc = build_service(_Widget)  # type: ignore[var-annotated]
     assert isinstance(svc, RepositoryService)
 
 def test_build_service_soft_delete_flag_returns_soft_delete_service() -> None:
-    svc = build_service(_Widget, soft_delete=True)
+    svc = build_service(_Widget, soft_delete=True)  # type: ignore[var-annotated]
     assert isinstance(svc, SoftDeleteRepositoryService)
 
 def test_build_service_custom_repo_passed_directly() -> None:
     repo = Repository[object, _Widget](_Widget)
-    svc = build_service(_Widget, repo=repo)
+    svc = build_service(_Widget, repo=repo)  # type: ignore[var-annotated]
     assert isinstance(svc, RepositoryService)
     assert svc.repo is repo
 
 def test_build_service_soft_delete_repo_infers_soft_delete_service() -> None:
     repo = SoftDeleteRepository[object, _Widget](_Widget)
-    svc = build_service(_Widget, repo=repo)
+    svc = build_service(_Widget, repo=repo)  # type: ignore[var-annotated]
     assert isinstance(svc, SoftDeleteRepositoryService)
 
 def test_build_service_soft_delete_service_class_with_non_soft_delete_repo_raises() -> None:
@@ -80,22 +80,22 @@ def test_build_service_soft_delete_flag_with_standard_service_class_used() -> No
 
 def test_build_service_repo_config_applied() -> None:
     repo_config = RepoConfig[_Widget](default_limit=_REPO_CONFIG_LIMIT)
-    svc = build_service(_Widget, repo_config=repo_config)
+    svc = build_service(_Widget, repo_config=repo_config)  # type: ignore[var-annotated]
     assert svc.repo.default_limit == _REPO_CONFIG_LIMIT
 
 def test_build_service_soft_delete_repo_with_soft_delete_true() -> None:
     repo = SoftDeleteRepository[object, _Widget](_Widget)
-    svc = build_service(_Widget, soft_delete=True, repo=repo)
+    svc = build_service(_Widget, soft_delete=True, repo=repo)  # type: ignore[var-annotated]
     assert isinstance(svc, SoftDeleteRepositoryService)
 
 def test_build_service_for_repo_standard_repo_returns_repository_service() -> None:
     repo = Repository[object, _Widget](_Widget)
-    svc = build_service_for_repo(repo)
+    svc = build_service_for_repo(repo)  # type: ignore[var-annotated]
     assert isinstance(svc, RepositoryService)
 
 def test_build_service_for_repo_soft_delete_repo_returns_soft_delete_service() -> None:
     repo = SoftDeleteRepository[object, _Widget](_Widget)
-    svc = build_service_for_repo(repo)
+    svc = build_service_for_repo(repo)  # type: ignore[var-annotated]
     assert isinstance(svc, SoftDeleteRepositoryService)
 
 def test_build_service_for_repo_custom_service_class_used() -> None:
@@ -113,5 +113,5 @@ def test_build_service_for_repo_soft_delete_service_cls_with_non_soft_delete_rep
 
 def test_build_service_for_repo_repo_is_wired_to_service() -> None:
     repo = Repository[object, _Widget](_Widget)
-    svc = build_service_for_repo(repo)
+    svc = build_service_for_repo(repo)  # type: ignore[var-annotated]
     assert svc.repo is repo

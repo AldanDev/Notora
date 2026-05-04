@@ -1,6 +1,7 @@
 """Tests for SerializerMixin — edge cases not covered by integration tests."""
 
 import types
+from typing import cast
 
 import pytest
 from pydantic import ConfigDict
@@ -21,8 +22,8 @@ class _ListSchema(BaseResponseSchema):
     model_config = ConfigDict(from_attributes=True)
 
 # A plain namespace satisfies `from_attributes=True` schemas that have no required fields.
-def _make_obj() -> types.SimpleNamespace:
-    return types.SimpleNamespace()
+def _make_obj() -> _Item:
+    return cast(_Item, types.SimpleNamespace())
 
 def _make_mixin() -> SerializerMixin[_Item, _DetailSchema, _ListSchema]:
     mixin: SerializerMixin[_Item, _DetailSchema, _ListSchema] = SerializerMixin()

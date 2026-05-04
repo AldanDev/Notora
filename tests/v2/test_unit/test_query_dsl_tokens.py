@@ -1,12 +1,13 @@
 """Tests for query_dsl token parsers, filter/sort clause builders, and build_query_params."""
 
-from typing import Any, cast
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
-from sqlalchemy import Integer, String, select
-from sqlalchemy.dialects import postgresql
+from sqlalchemy import Integer, String, create_engine, select
+from sqlalchemy.engine.interfaces import Dialect
 from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.sql import ColumnElement
 
 from notora.v2.models.base import GenericBaseModel
@@ -31,10 +32,13 @@ _POSITIVE_LIMIT = 50
 _LIMIT_SMALL = 5
 _OFFSET_SMALL = 10
 
-def _render(clause: ColumnElement) -> str:  # type: ignore[type-arg]
+_PG_DIALECT: Dialect = create_engine('postgresql+asyncpg://').dialect
+
+
+def _render(clause: ColumnElement[Any] | InstrumentedAttribute[Any]) -> str:
     return str(
         clause.compile(
-            dialect=postgresql.dialect(),  # type: ignore[no-untyped-call]
+            dialect=_PG_DIALECT,
             compile_kwargs={'literal_binds': True},
         )
     )
@@ -173,15 +177,16 @@ def test_apply_filter_operator_isnull_false() -> None:
 
 def test_apply_filter_operator_unsupported_operator_raises() -> None:
     with pytest.raises(ValueError, match='Unsupported filter operator'):
-        apply_filter_operator(SampleModel.name, 'contains', 'x')  # type: ignore[arg-type]
+        bad_op: Any = 'contains'
+        apply_filter_operator(SampleModel.name, bad_op, 'x')
 
 def test_resolve_to_column_direct_column_returned_unchanged() -> None:
     col = resolve_to_column(SampleModel.name, SampleModel)
-    assert 'sample_model.name' in _render(cast(ColumnElement[Any], col))
+    assert 'sample_model.name' in _render(col)
 
 def test_resolve_to_column_callable_resolver_called_with_model() -> None:
     col = resolve_to_column(lambda m: m.score, SampleModel)
-    assert 'sample_model.score' in _render(cast(ColumnElement[Any], col))
+    assert 'sample_model.score' in _render(col)
 
 def test_build_filter_clauses_single_eq_clause() -> None:
     tokens = [FilterToken(field='name', operator='eq', raw_value='alice')]

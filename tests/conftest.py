@@ -1,2 +1,5 @@
-def pytest_addoption(parser) -> None:  # type: ignore[no-untyped-def]
+from _pytest.config.argparsing import Parser
+
+
+def pytest_addoption(parser: Parser) -> None:
     parser.addoption('--postgres-version', action='store', default='latest')

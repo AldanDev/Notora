@@ -1,11 +1,11 @@
-from typing import Annotated, Any, ClassVar, Literal, cast
+from typing import Annotated, Any, ClassVar, Literal
 from uuid import UUID, uuid4
 
 import pytest
 from pydantic import BaseModel, Field
-from sqlalchemy import Boolean, Integer, String
-from sqlalchemy.dialects import postgresql
+from sqlalchemy import Boolean, Integer, String, create_engine
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
+from sqlalchemy.engine.interfaces import Dialect
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import ColumnElement, or_
 
@@ -59,12 +59,14 @@ class ThingOrdering(PydanticOrderBySchema[Thing]):
     }
 
 
+_PG_DIALECT: Dialect = create_engine('postgresql+asyncpg://').dialect
+
+
 def _render(spec: FilterSpec[Any] | OrderSpec[Any]) -> str:
     assert not callable(spec)
-    clause = cast(ColumnElement[Any], spec)
     return str(
-        clause.compile(
-            dialect=postgresql.dialect(),  # type: ignore[no-untyped-call]
+        spec.compile(
+            dialect=_PG_DIALECT,
             compile_kwargs={'literal_binds': True},
         ),
     )

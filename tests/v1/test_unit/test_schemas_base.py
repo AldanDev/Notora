@@ -164,7 +164,7 @@ def test_client_meta_ip_address_serialized_as_string() -> None:
     dumped = client.model_dump()
     assert dumped['ip_address'] == '192.168.0.1'
 
-def test_filter_default_op_is_eq() -> None:
+def test_filter_default_op_is_equals_sign() -> None:
     f = Filter(field='name', value='alice')
     assert f.op == '='
 

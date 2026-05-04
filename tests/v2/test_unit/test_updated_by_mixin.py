@@ -1,6 +1,6 @@
 """Tests for UpdatedByServiceMixin."""
 
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from sqlalchemy import String, Uuid
@@ -13,7 +13,7 @@ from notora.v2.services.mixins.updated_by import UpdatedByServiceMixin
 
 class _WithUpdatedBy(GenericBaseModel):
     name: Mapped[str] = mapped_column(String)
-    updated_by: Mapped[object] = mapped_column(Uuid, nullable=True)
+    updated_by: Mapped[UUID | None] = mapped_column(Uuid, nullable=True)
 
 
 class _WithoutUpdatedBy(GenericBaseModel):
@@ -64,7 +64,7 @@ def test_apply_updated_by_model_without_attribute_raises() -> None:
 def test_apply_updated_by_custom_attribute_name_used() -> None:
     class _WithCustomAttr(GenericBaseModel):
         name: Mapped[str] = mapped_column(String)
-        modified_by: Mapped[object] = mapped_column(Uuid, nullable=True)
+        modified_by: Mapped[UUID | None] = mapped_column(Uuid, nullable=True)
 
     class _CustomMixin(UpdatedByServiceMixin[object, _WithCustomAttr]):
         updated_by_attribute = 'modified_by'

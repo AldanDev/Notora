@@ -89,7 +89,7 @@ def test_build_service_soft_delete_service_class_with_non_soft_delete_repo_raise
         build_service(_Widget, repo=repo, service_cls=SoftDeleteRepositoryService)
 
 
-def test_build_service_soft_delete_flag_with_standard_service_class_used() -> None:
+def test_build_service_soft_delete_flag_with_explicit_service_class() -> None:
     svc: AnyService[object, _SoftWidget, Any, Any] = build_service(
         _SoftWidget,
         soft_delete=True,

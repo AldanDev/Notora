@@ -175,11 +175,11 @@ def test_apply_filter_operator_unsupported_operator_raises() -> None:
 
 def test_resolve_to_column_direct_column_returned_unchanged() -> None:
     col = resolve_to_column(SampleModel.name, SampleModel)
-    assert 'sample_model.name' in str(col)
+    assert 'sample_model.name' in _render(col)
 
 def test_resolve_to_column_callable_resolver_called_with_model() -> None:
     col = resolve_to_column(lambda m: m.score, SampleModel)
-    assert 'sample_model.score' in str(col)
+    assert 'sample_model.score' in _render(col)
 
 def test_build_filter_clauses_single_eq_clause() -> None:
     tokens = [FilterToken(field='name', operator='eq', raw_value='alice')]

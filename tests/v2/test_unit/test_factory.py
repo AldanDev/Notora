@@ -89,7 +89,8 @@ class TestBuildService:
     def test_soft_delete_true_without_matching_service_cls_raises(self) -> None:
         """Passing a plain Repository as repo + soft_delete=True internally should be fine
         only if the repo is SoftDeleteRepository.  When soft_delete=True is inferred
-        from the build_repository call, we get a SoftDeleteRepository automatically."""
+        from the build_repository call, we get a SoftDeleteRepository automatically.
+        """
         repo = SoftDeleteRepository[object, _Widget](_Widget)
         svc = build_service(_Widget, soft_delete=True, repo=repo)
         assert isinstance(svc, SoftDeleteRepositoryService)

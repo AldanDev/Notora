@@ -1,21 +1,18 @@
 from datetime import UTC, datetime, timedelta, timezone
 from ipaddress import IPv4Address, IPv6Address
-from uuid import uuid4
 
-import pytest
-
+from notora.v1.enums.base import OrderByDirections
 from notora.v1.schemas.base import (
     AdminMeta,
     ClientMeta,
     Filter,
-    OrFilterGroup,
     OrderBy,
+    OrFilterGroup,
     PaginationMetaSchema,
     datetime_encoder,
     normalize_datetime_to_utc,
     utc_datetime_encoder,
 )
-from notora.v1.enums.base import OrderByDirections
 
 
 class TestNormalizeDatetimeToUtc:

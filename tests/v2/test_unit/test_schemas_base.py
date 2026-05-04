@@ -2,8 +2,6 @@
 
 from ipaddress import IPv4Address, IPv6Address
 
-import pytest
-
 from notora.v2.schemas.base import ClientMeta, PaginationMetaSchema
 
 

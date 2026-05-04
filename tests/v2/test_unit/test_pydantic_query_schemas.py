@@ -243,7 +243,9 @@ def test_extract_annotated_filters_returns_one_per_field() -> None:
 
 def test_extract_annotated_filters_skips_non_filter_metadata() -> None:
     class Mixed(BaseModel):
-        name: Annotated[str | None, Filter(resolver=Thing.name)] = Field(default=None, description='X')
+        name: Annotated[str | None, Filter(resolver=Thing.name)] = Field(
+            default=None, description='X'
+        )
         plain: str | None = None
 
     out = _extract_annotated_filters(Mixed)
@@ -252,6 +254,7 @@ def test_extract_annotated_filters_skips_non_filter_metadata() -> None:
 
 def test_extract_annotated_filters_raises_on_multiple_filters_in_one_field() -> None:
     with pytest.raises(TypeError, match='multiple Filter'):
+
         class Conflict(BaseModel):
             name: Annotated[
                 str | None,
@@ -321,6 +324,7 @@ def test_mixing_via_inheritance_raises() -> None:
         }
 
     with pytest.raises(TypeError, match='mixes legacy `filter_fields` ClassVar'):
+
         class AnnotatedChild(LegacyParent):
             age: Annotated[int | None, Filter(resolver=Thing.age)] = None
 
@@ -357,10 +361,12 @@ class ThingFiltersAnnotated(PydanticFiltersSchema[Thing]):
     is_active: Annotated[bool | None, Filter(resolver=Thing.is_active)] = None
     q: Annotated[
         str | None,
-        Filter(predicate=lambda m, _op, v: or_(
-            m.name.ilike(f'%{v}%'),
-            m.owner_id.cast(String).ilike(f'%{v}%'),
-        )),
+        Filter(
+            predicate=lambda m, _op, v: or_(
+                m.name.ilike(f'%{v}%'),
+                m.owner_id.cast(String).ilike(f'%{v}%'),
+            )
+        ),
     ] = None
 
 

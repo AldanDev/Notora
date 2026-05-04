@@ -106,7 +106,9 @@ def test_build_service_repo_config_applied() -> None:
 
 def test_build_service_soft_delete_repo_with_soft_delete_true() -> None:
     repo = SoftDeleteRepository[object, _SoftWidget](_SoftWidget)
-    svc: AnyService[object, _SoftWidget, Any, Any] = build_service(_SoftWidget, soft_delete=True, repo=repo)
+    svc: AnyService[object, _SoftWidget, Any, Any] = build_service(
+        _SoftWidget, soft_delete=True, repo=repo
+    )
     assert isinstance(svc, SoftDeleteRepositoryService)
 
 
@@ -127,7 +129,9 @@ def test_build_service_for_repo_custom_service_class_used() -> None:
         pass
 
     repo = Repository[object, _Widget](_Widget)
-    svc: AnyService[object, _Widget, Any, Any] = build_service_for_repo(repo, service_cls=_CustomService)
+    svc: AnyService[object, _Widget, Any, Any] = build_service_for_repo(
+        repo, service_cls=_CustomService
+    )
     assert isinstance(svc, _CustomService)
 
 

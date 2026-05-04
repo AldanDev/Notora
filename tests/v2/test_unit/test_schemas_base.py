@@ -1,0 +1,45 @@
+"""Tests for v2 schemas.base not covered elsewhere — ClientMeta, PaginationMetaSchema edge cases."""
+
+from ipaddress import IPv4Address, IPv6Address
+
+import pytest
+
+from notora.v2.schemas.base import ClientMeta, PaginationMetaSchema
+
+
+class TestClientMeta:
+    def test_both_fields_none_by_default(self) -> None:
+        client = ClientMeta()
+        assert client.ip_address is None
+        assert client.user_agent is None
+
+    def test_ipv4_address_accepted(self) -> None:
+        client = ClientMeta(ip_address=IPv4Address('192.168.1.1'))
+        assert isinstance(client.ip_address, IPv4Address)
+
+    def test_ipv6_address_accepted(self) -> None:
+        client = ClientMeta(ip_address=IPv6Address('::1'))
+        assert isinstance(client.ip_address, IPv6Address)
+
+    def test_user_agent_stored(self) -> None:
+        client = ClientMeta(user_agent='Mozilla/5.0')
+        assert client.user_agent == 'Mozilla/5.0'
+
+    def test_ip_serialized_as_string_in_dict(self) -> None:
+        client = ClientMeta(ip_address=IPv4Address('10.0.0.1'))
+        dumped = client.model_dump()
+        assert dumped['ip_address'] == '10.0.0.1'
+
+
+class TestPaginationMetaSchemaNegativeTotal:
+    def test_negative_total_clamped_to_zero(self) -> None:
+        meta = PaginationMetaSchema.calculate(total=-5, limit=10, offset=0)
+        assert meta.total == 0
+
+    def test_zero_total_preserved(self) -> None:
+        meta = PaginationMetaSchema.calculate(total=0, limit=10, offset=0)
+        assert meta.total == 0
+
+    def test_positive_total_preserved(self) -> None:
+        meta = PaginationMetaSchema.calculate(total=100, limit=10, offset=0)
+        assert meta.total == 100

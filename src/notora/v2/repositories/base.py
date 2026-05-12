@@ -230,3 +230,19 @@ class SoftDeleteRepositoryProtocol[PKType, ModelType: GenericBaseModel](
         options: Iterable[OptionSpec[ModelType]] | None = None,
         additional_payload: dict[str, Any] | None = None,
     ) -> TypedReturnsRows[tuple[ModelType]]: ...
+
+    def restore(
+        self,
+        pk: PKType,
+        *,
+        options: Iterable[OptionSpec[ModelType]] | None = None,
+        additional_payload: dict[str, Any] | None = None,
+    ) -> TypedReturnsRows[tuple[ModelType]]: ...
+
+    def restore_by(
+        self,
+        *,
+        filters: Iterable[FilterSpec[ModelType]] | None = None,
+        options: Iterable[OptionSpec[ModelType]] | None = None,
+        additional_payload: dict[str, Any] | None = None,
+    ) -> TypedReturnsRows[tuple[ModelType]]: ...

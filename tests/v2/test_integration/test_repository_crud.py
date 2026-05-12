@@ -203,3 +203,84 @@ async def test_repo_soft_delete_with_additional_payload(
     assert refreshed is not None
     assert refreshed.deleted_at is not None
     assert refreshed.updated_by == actor_id
+
+
+async def test_repo_restore(
+    db_session: AsyncSession,
+    user_repo: V2UserRepo,
+) -> None:
+    user = await _create_user(
+        db_session,
+        user_repo,
+        email='restore@ex.com',
+        name='Restore',
+    )
+
+    await db_session.execute(user_repo.soft_delete(user.id))
+    await db_session.commit()
+
+    await db_session.execute(user_repo.restore(user.id))
+    await db_session.commit()
+
+    refreshed = await db_session.get(V2User, user.id)
+    assert refreshed is not None
+    assert refreshed.deleted_at is None
+
+    listed = (await db_session.scalars(user_repo.list(limit=None))).all()
+    assert len(listed) == 1
+    assert listed[0].id == user.id
+
+
+async def test_repo_restore_by(
+    db_session: AsyncSession,
+    user_repo: V2UserRepo,
+) -> None:
+    users = await _seed_users(db_session)
+
+    await db_session.execute(
+        user_repo.soft_delete_by(
+            filters=[V2User.email.in_([users[0].email, users[1].email])]
+        )
+    )
+    await db_session.commit()
+
+    await db_session.execute(
+        user_repo.restore_by(
+            filters=[V2User.email.in_([users[0].email, users[1].email])]
+        )
+    )
+    await db_session.commit()
+
+    for user in users:
+        refreshed = await db_session.get(V2User, user.id)
+        assert refreshed is not None
+        assert refreshed.deleted_at is None
+
+    listed = (await db_session.scalars(user_repo.list(limit=None))).all()
+    assert len(listed) == len(users)
+
+
+async def test_repo_restore_with_additional_payload(
+    db_session: AsyncSession,
+    user_repo: V2UserRepo,
+) -> None:
+    actor_id = uuid4()
+    user = await _create_user(
+        db_session,
+        user_repo,
+        email='restore-payload@ex.com',
+        name='RestorePayload',
+    )
+
+    await db_session.execute(user_repo.soft_delete(user.id))
+    await db_session.commit()
+
+    await db_session.execute(
+        user_repo.restore(user.id, additional_payload={'updated_by': actor_id})
+    )
+    await db_session.commit()
+
+    refreshed = await db_session.get(V2User, user.id)
+    assert refreshed is not None
+    assert refreshed.deleted_at is None
+    assert refreshed.updated_by == actor_id

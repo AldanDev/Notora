@@ -175,3 +175,32 @@ class SoftDeleteMixin[PKType, ModelType: GenericBaseModel](UpdateMixin[PKType, M
             options=options,
             additional_payload=additional_payload,
         )
+
+    def restore_by(
+        self,
+        *,
+        filters: Iterable[FilterSpec[ModelType]] | None = None,
+        options: Iterable[OptionSpec[ModelType]] | None = None,
+        additional_payload: dict[str, Any] | None = None,
+    ) -> TypedReturnsRows[tuple[ModelType]]:
+        payload: dict[str, Any] = {self.deleted_attribute: None}
+        if additional_payload:
+            payload.update(additional_payload)
+        stmt = update(self.model).values(**payload)
+        stmt = self.apply_filters(stmt, filters, apply_default_filters=False)
+        stmt = stmt.returning(self.model)
+        return self.apply_options(stmt, options)
+
+    def restore(
+        self,
+        pk: PKType,
+        *,
+        options: Iterable[OptionSpec[ModelType]] | None = None,
+        additional_payload: dict[str, Any] | None = None,
+    ) -> TypedReturnsRows[tuple[ModelType]]:
+        filters = (cast(FilterClause, self.pk_column == pk),)
+        return self.restore_by(
+            filters=filters,
+            options=options,
+            additional_payload=additional_payload,
+        )

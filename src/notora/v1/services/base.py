@@ -443,3 +443,26 @@ class SoftDeletableService[
         query = self.repo.soft_delete_by(filters)
         result = await db_session.scalars(query)
         return result
+
+    async def restore(self, db_session: AsyncSession, entity_id: PKType) -> ModelClass:
+        query = self.repo.restore(entity_id)
+        result = await self.execute_for_one(db_session, query)
+        return result
+
+    async def restore_one_by(
+        self,
+        db_session: AsyncSession,
+        filters: Iterable[Filters],
+    ) -> ModelClass:
+        query = self.repo.restore_by(filters)
+        result = await self.execute_for_one(db_session, query)
+        return result
+
+    async def restore_all_raw_by(
+        self,
+        db_session: AsyncSession,
+        filters: Iterable[Filters],
+    ) -> Iterable[ModelClass]:
+        query = self.repo.restore_by(filters)
+        result = await db_session.scalars(query)
+        return result

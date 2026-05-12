@@ -117,3 +117,54 @@ class SoftDeleteServiceMixin[
     ) -> list[ListSchema]:
         entities = await self.soft_delete_by_raw(session, filters, actor_id=actor_id)
         return self.serialize_many(entities, schema=schema)
+
+    async def restore_raw(
+        self,
+        session: AsyncSession,
+        pk: PKType,
+        *,
+        actor_id: Any | None = None,
+    ) -> ModelType:
+        additional_payload = self._apply_updated_by({}, actor_id) or None
+        return await self.execute_for_one(
+            session,
+            self.repo.restore(pk, additional_payload=additional_payload),
+        )
+
+    async def restore(
+        self,
+        session: AsyncSession,
+        pk: PKType,
+        *,
+        actor_id: Any | None = None,
+        schema: type[DetailSchema] | None = None,
+    ) -> DetailSchema:
+        entity = await self.restore_raw(session, pk, actor_id=actor_id)
+        return self.serialize_one(entity, schema=schema)
+
+    async def restore_by_raw(
+        self,
+        session: AsyncSession,
+        filters: Iterable[FilterSpec[ModelType]],
+        *,
+        actor_id: Any | None = None,
+    ) -> list[ModelType]:
+        additional_payload = self._apply_updated_by({}, actor_id) or None
+        return await self.execute_for_many(
+            session,
+            self.repo.restore_by(
+                filters=filters,
+                additional_payload=additional_payload,
+            ),
+        )
+
+    async def restore_by(
+        self,
+        session: AsyncSession,
+        filters: Iterable[FilterSpec[ModelType]],
+        *,
+        actor_id: Any | None = None,
+        schema: type[ListSchema] | None = None,
+    ) -> list[ListSchema]:
+        entities = await self.restore_by_raw(session, filters, actor_id=actor_id)
+        return self.serialize_many(entities, schema=schema)

@@ -132,3 +132,53 @@ class SoftDeleteServiceMixin[
         actor_id: Any | None = None,
         schema: type[SchemaT],
     ) -> list[SchemaT]: ...
+    async def restore_raw(
+        self,
+        session: AsyncSession,
+        pk: PKType,
+        *,
+        actor_id: Any | None = None,
+    ) -> ModelType: ...
+    @overload
+    async def restore(
+        self,
+        session: AsyncSession,
+        pk: PKType,
+        *,
+        actor_id: Any | None = None,
+        schema: None = ...,
+    ) -> DetailSchema: ...
+    @overload
+    async def restore[SchemaT: BaseResponseSchema](
+        self,
+        session: AsyncSession,
+        pk: PKType,
+        *,
+        actor_id: Any | None = None,
+        schema: type[SchemaT],
+    ) -> SchemaT: ...
+    async def restore_by_raw(
+        self,
+        session: AsyncSession,
+        filters: Iterable[FilterSpec[ModelType]],
+        *,
+        actor_id: Any | None = None,
+    ) -> list[ModelType]: ...
+    @overload
+    async def restore_by(
+        self,
+        session: AsyncSession,
+        filters: Iterable[FilterSpec[ModelType]],
+        *,
+        actor_id: Any | None = None,
+        schema: None = ...,
+    ) -> list[ListSchema]: ...
+    @overload
+    async def restore_by[SchemaT: BaseResponseSchema](
+        self,
+        session: AsyncSession,
+        filters: Iterable[FilterSpec[ModelType]],
+        *,
+        actor_id: Any | None = None,
+        schema: type[SchemaT],
+    ) -> list[SchemaT]: ...

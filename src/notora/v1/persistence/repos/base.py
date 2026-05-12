@@ -330,3 +330,18 @@ class SoftDeletableRepo[
         query = update(self.model).values({'deleted_at': now()})
         query = self.add_filters(query, filters)
         return query.returning(self.model)
+
+    def restore(
+        self,
+        entity_id: PKType,
+    ) -> TypedReturnsRows[tuple[ModelType]]:
+        return self.restore_by([Filter(field='id', op='eq', value=entity_id)])
+
+    def restore_by(
+        self,
+        filters: Iterable[Filters] = (),
+    ) -> TypedReturnsRows[tuple[ModelType]]:
+        query = update(self.model).values({'deleted_at': None})
+        for predicate in self._get_query_predicates(filters):
+            query = query.where(predicate)
+        return query.returning(self.model)

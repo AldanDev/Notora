@@ -200,3 +200,50 @@ async def test_soft_delete_is_not_hard(db_session: AsyncSession, mock_repo: Mock
     res = (await db_session.scalars(select(mock_repo.model))).all()
     assert len(res) == objs_count
     assert obj_to_delete in res
+
+
+async def test_restore(db_session: AsyncSession, mock_repo: MockRepo) -> None:
+    objs = await _setup(db_session, 1)
+    obj_to_restore = objs[0]
+
+    query = mock_repo.soft_delete(obj_to_restore.id)
+    await db_session.execute(query)
+    await db_session.commit()
+
+    refreshed = await db_session.get(MockModel, obj_to_restore.id)
+    assert refreshed
+    assert refreshed.deleted_at is not None
+
+    query = mock_repo.restore(obj_to_restore.id)
+    await db_session.execute(query)
+    await db_session.commit()
+
+    refreshed = await db_session.get(MockModel, obj_to_restore.id)
+    assert refreshed
+    assert refreshed.deleted_at is None
+
+    query = mock_repo.select()
+    res = (await db_session.scalars(query)).all()
+    assert len(res) == 1
+    assert res[0].id == obj_to_restore.id
+
+
+async def test_restore_by(db_session: AsyncSession, mock_repo: MockRepo) -> None:
+    objs = await _setup(db_session, 3)
+    ids_to_restore = [obj.id for obj in objs[:2]]
+
+    query = mock_repo.soft_delete_by(filters=[Filter(field='id', op='in', value=ids_to_restore)])
+    await db_session.execute(query)
+    await db_session.commit()
+
+    query = mock_repo.restore_by(filters=[Filter(field='id', op='in', value=ids_to_restore)])
+    await db_session.execute(query)
+    await db_session.commit()
+
+    for obj_id in ids_to_restore:
+        obj = await _select_one(db_session, obj_id)
+        assert obj.deleted_at is None
+
+    remaining_obj = await _select_one(db_session, objs[2].id)
+    assert remaining_obj
+    assert remaining_obj.deleted_at is None

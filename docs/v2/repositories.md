@@ -24,7 +24,7 @@ Write mixins:
 - `UpsertMixin` -> `upsert()`
 - `UpdateMixin` -> `update()` / `update_by()`
 - `DeleteMixin` -> `delete()` / `delete_by()`
-- `SoftDeleteMixin` -> `soft_delete()` / `soft_delete_by()`
+- `SoftDeleteMixin` -> `soft_delete()` / `soft_delete_by()` / `restore()` / `restore_by()`
 
 ## RepoConfig
 
@@ -160,5 +160,26 @@ To include deleted rows, disable the filter:
 repo = SoftDeleteRepository(
     User,
     config=RepoConfig(apply_soft_delete_filter=False),
+)
+```
+
+### Restore soft-deleted rows
+
+`restore` and `restore_by` clear `deleted_at` back to `NULL`. They bypass the
+soft-delete default filter so they can target already-deleted records:
+
+```python
+# Restore by primary key
+query = repo.restore(user_id)
+
+# Restore by filters
+query = repo.restore_by(
+    filters=[lambda m: m.email == "a@b.com"],
+)
+
+# Restore with extra payload (e.g. updated_by)
+query = repo.restore(
+    user_id,
+    additional_payload={"updated_by": current_user_id},
 )
 ```

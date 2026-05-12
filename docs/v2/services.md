@@ -10,6 +10,8 @@ Services combine repository statements, async execution, and serialization.
 `ListSchema` defaults to `DetailSchema` if omitted.
 
 Both include create/update/delete/retrieve/list/paginate helpers.
+`SoftDeleteRepositoryService` also exposes `soft_delete` / `soft_delete_by` and
+`restore` / `restore_by`.
 
 ## Query execution
 
@@ -194,4 +196,29 @@ entity = await service.upsert(
 ```python
 rows = await service.list(session, limit=20, offset=0)
 page = await service.paginate(session, limit=20, offset=0)
+```
+
+### Soft delete and restore
+
+```python
+# Soft delete by primary key
+deleted = await service.soft_delete(session, user_id)
+
+# Soft delete by filters
+deleted = await service.soft_delete_by(
+    session,
+    filters=[lambda m: m.email == "a@b.com"],
+)
+
+# Restore by primary key
+restored = await service.restore(session, user_id)
+
+# Restore by filters
+restored = await service.restore_by(
+    session,
+    filters=[lambda m: m.email == "a@b.com"],
+)
+
+# With actor tracking
+restored = await service.restore(session, user_id, actor_id=current_user_id)
 ```

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Notora v2"
+  short_description: "Use notora v2 APIs correctly."
+  default_prompt: "Use $notora-v2 to implement notora v2 models, repositories, services, query DSL, or pagination correctly."

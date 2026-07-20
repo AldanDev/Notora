@@ -34,7 +34,7 @@ Issues = "https://github.com/AldanDev/Notora/issues"
 
 [dependency-groups]
 lint = [
-    "mypy<2.0.0,>=1.18.2",
+    "mypy>=1.18.2,<3.0.0",
     "ruff<1.0.0,>=0.14.5",
     "pyright<2.0.0,>=1.1.407",
 ]

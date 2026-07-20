@@ -1,7 +1,7 @@
 import operator
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
-from typing import Any, Literal, cast
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, TypeAdapter, field_validator
 from sqlalchemy.orm import InstrumentedAttribute
@@ -107,12 +107,11 @@ def parse_filter_token(raw: str) -> FilterToken:
     if op not in DEFAULT_OPERATORS:
         msg = f'Unsupported filter operator "{op}".'
         raise ValueError(msg)
-    operator = cast(FilterOperator, op)
     if raw_value is not None:
         raw_value = raw_value.strip()
         if not raw_value:
             raw_value = None
-    return FilterToken(field=field_name, operator=operator, raw_value=raw_value)
+    return FilterToken(field=field_name, operator=op, raw_value=raw_value)
 
 
 def parse_sort_token(raw: str) -> SortToken:

@@ -77,14 +77,14 @@ def make_list_params_dependency[ModelType: GenericBaseModel](
 
         return _dependency
 
-    bypass_query = fastapi.Query(False, alias=default_filter_bypass_param)  # noqa: FBT003
+    bypass_query = fastapi.Query(False, alias=default_filter_bypass_param)  # ruff: ignore[boolean-positional-value-in-call]
 
     def _dependency_with_bypass(
         filters: filters_schema = filters_dep,  # type: ignore[valid-type]
         ordering: order_schema = ordering_dep,  # type: ignore[valid-type]
         limit: int = limit_query,
         offset: int = offset_query,
-        bypass_default_filters: bool = bypass_query,  # noqa: FBT001  (FastAPI requires bool annotation for query parsing)
+        bypass_default_filters: bool = bypass_query,  # ruff: ignore[boolean-type-hint-positional-argument]  (FastAPI requires bool annotation for query parsing)
     ) -> PaginationParams[ModelType]:
         return PaginationParams(
             filters=filters.build_filter_specs(model),  # type: ignore[attr-defined]

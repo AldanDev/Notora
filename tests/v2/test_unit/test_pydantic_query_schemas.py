@@ -17,7 +17,7 @@ from notora.v2.schemas.query import (
     PydanticFiltersSchema,
     PydanticOrderBySchema,
     PydanticSortField,
-    _extract_annotated_filters,  # noqa: PLC2701  (intentional: test of module-private helper)
+    _extract_annotated_filters,  # ruff: ignore[import-private-name]  (intentional: test of module-private helper)
 )
 
 

@@ -27,7 +27,7 @@ type ServiceType[
 )
 
 
-def build_service[  # noqa: C901
+def build_service[  # ruff: ignore[complex-structure]
     PKType,
     ModelType: GenericBaseModel,
     DetailSchema: BaseResponseSchema,

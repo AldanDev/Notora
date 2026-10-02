@@ -86,7 +86,7 @@ class BaseModel(GenericBaseModel, UpdatableMixin, SoftDeletableMixin):
     __abstract__ = True
 
     @declared_attr  # type: ignore[arg-type]
-    def __tablename__(cls) -> str:  # noqa: N805
+    def __tablename__(cls) -> str:  # ruff: ignore[invalid-first-argument-name-for-method]
         return re.compile(r'(?<!^)(?=[A-Z])').sub('_', cls.__name__).lower()
 
 

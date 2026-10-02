@@ -31,7 +31,7 @@ class Repository[PKType, ModelType: GenericBaseModel](
 ):
     """Composition-friendly base repository built out of mixins."""
 
-    def __init__(  # noqa: C901
+    def __init__(  # ruff: ignore[complex-structure]
         self, model: type[ModelType], *, config: RepoConfig[ModelType] | None = None
     ) -> None:
         self.model = model
@@ -68,7 +68,7 @@ class SoftDeleteRepository[PKType, ModelType: GenericBaseModel](
         column = cast(InstrumentedAttribute[Any], getattr(self.model, self.deleted_attribute))
         return column.is_(None)
 
-    def __init__(  # noqa: C901
+    def __init__(  # ruff: ignore[complex-structure]
         self, model: type[ModelType], *, config: RepoConfig[ModelType] | None = None
     ) -> None:
         self.model = model

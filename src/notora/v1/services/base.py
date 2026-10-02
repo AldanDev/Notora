@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
 type Filters = Filter | OrFilterGroup
 
 
-class BaseService[  # noqa: PLR0904
+class BaseService[  # ruff: ignore[too-many-public-methods]
     PKType,
     ModelClass: GenericBaseModel,
     ModelResponseSchema: BaseResponseSchema,

@@ -20,7 +20,7 @@ class QueryParams[ModelType: GenericBaseModel]:
     options: Iterable[OptionSpec[ModelType]] | None = None
     limit: int | DefaultLimit | None = DEFAULT_LIMIT
     offset: int = 0
-    base_query: Select[tuple[ModelType]] | None = None
+    base_query: Select[ModelType] | None = None
     apply_default_filters: bool = True
 
 
@@ -31,5 +31,5 @@ class PaginationParams[ModelType: GenericBaseModel]:
     options: Iterable[OptionSpec[ModelType]] | None = None
     limit: int = 20
     offset: int = 0
-    base_query: Select[tuple[ModelType]] | None = None
+    base_query: Select[ModelType] | None = None
     apply_default_filters: bool = True

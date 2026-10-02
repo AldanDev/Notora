@@ -1,5 +1,5 @@
 import os
-from collections.abc import AsyncIterator, Iterator
+from collections.abc import AsyncIterator, Iterator, Sequence
 
 import pytest
 from sqlalchemy import text
@@ -47,7 +47,7 @@ async def init_db(db_engine: AsyncEngine) -> None:
     async with db_engine.begin() as conn:
         await conn.run_sync(MockModel.metadata.create_all)
         stmt = text("SELECT c.relname FROM pg_class c WHERE c.relkind = 'S';")
-        sequences = (await conn.execute(stmt)).scalars().all()
+        sequences: Sequence[str] = (await conn.execute(stmt)).scalars().all()
         for sequence in sequences:
             await conn.execute(text(f'ALTER SEQUENCE {sequence} RESTART;'))
 
@@ -57,7 +57,7 @@ async def clean_all_tables(db_engine: AsyncEngine) -> None:
     """Clean all tables before tests and after every test."""
     stmt = text("SELECT t.table_name FROM information_schema.tables t WHERE table_schema='public'")
     async with db_engine.begin() as conn:
-        tables = (await conn.execute(stmt)).scalars().all()
+        tables: Sequence[str] = (await conn.execute(stmt)).scalars().all()
         tables = [
             t_name
             for t_name in tables

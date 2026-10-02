@@ -26,6 +26,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import InstrumentedAttribute
 from sqlalchemy.sql.base import ExecutableOption
 from sqlalchemy.sql.dml import ReturningInsert
+from sqlalchemy.sql.elements import OrderByList
 from sqlalchemy.sql.functions import now
 from sqlalchemy.sql.selectable import TypedReturnsRows
 
@@ -49,7 +50,7 @@ class BaseRepo[PKType, ModelType: GenericBaseModel]:
         self.model = model
         self.default_limit = default_limit
 
-    def select(self) -> Select[tuple[ModelType]]:
+    def select(self) -> Select[ModelType]:
         return select(self.model).options(*self.load_options)
 
     def create_or_skip(
@@ -57,7 +58,7 @@ class BaseRepo[PKType, ModelType: GenericBaseModel]:
         data: dict[str, Any],
         index_elements: Iterable[InstrumentedAttribute[Any]],
         index_where: Iterable[Filters] | None = None,
-    ) -> ReturningInsert[tuple[ModelType]]:
+    ) -> ReturningInsert[ModelType]:
         where = None if not index_where else and_(*self._get_query_predicates(index_where))
         return (
             insert(self.model)
@@ -67,10 +68,10 @@ class BaseRepo[PKType, ModelType: GenericBaseModel]:
             .options(*self.load_options)
         )
 
-    def create(self, data: dict[str, Any]) -> ReturningInsert[tuple[ModelType]]:
+    def create(self, data: dict[str, Any]) -> ReturningInsert[ModelType]:
         return insert(self.model).values(**data).returning(self.model).options(*self.load_options)
 
-    def bulk_create(self, data: Sequence[dict[str, Any]]) -> ReturningInsert[tuple[ModelType]]:
+    def bulk_create(self, data: Sequence[dict[str, Any]]) -> ReturningInsert[ModelType]:
         return insert(self.model).values(data).returning(self.model).options(*self.load_options)
 
     @overload
@@ -81,7 +82,7 @@ class BaseRepo[PKType, ModelType: GenericBaseModel]:
         update_include_fields: Iterable[str] | None = None,
         index_elements: Iterable[InstrumentedAttribute[Any]] | None = None,
         index_where: Iterable[Filters] | None = None,
-    ) -> ReturningInsert[tuple[ModelType]]: ...
+    ) -> ReturningInsert[ModelType]: ...
 
     @overload
     def upsert(
@@ -91,7 +92,7 @@ class BaseRepo[PKType, ModelType: GenericBaseModel]:
         update_exclude_fields: Iterable[str] | None = None,
         index_elements: Iterable[InstrumentedAttribute[Any]] | None = None,
         index_where: Iterable[Filters] | None = None,
-    ) -> ReturningInsert[tuple[ModelType]]: ...
+    ) -> ReturningInsert[ModelType]: ...
 
     def upsert(
         self,
@@ -101,7 +102,7 @@ class BaseRepo[PKType, ModelType: GenericBaseModel]:
         update_exclude_fields: Iterable[str] | None = None,
         index_elements: Iterable[InstrumentedAttribute[Any]] | None = None,
         index_where: Iterable[Filters] | None = None,
-    ) -> ReturningInsert[tuple[ModelType]]:
+    ) -> ReturningInsert[ModelType]:
         validate_exclusive_presence(update_include_fields, update_exclude_fields)
         if update_include_fields is not None:
             update_data = {
@@ -127,25 +128,25 @@ class BaseRepo[PKType, ModelType: GenericBaseModel]:
 
     def list_(
         self,
-        base_query: Select[tuple[ModelType]] | None = None,
+        base_query: Select[ModelType] | None = None,
         filters: Iterable[Filters] = (),
         limit: int | None = None,
         offset: int = 0,
         order_by: Iterable[OrderBy] = (),
-    ) -> Select[tuple[ModelType]]:
+    ) -> Select[ModelType]:
         query = base_query if base_query is not None else self.select()
         query = self.add_filters(query, filters)
         query = self.add_order_by(query, order_by)
         return query.limit(limit or self.default_limit).offset(offset)
 
-    def retrieve(self, entity_id: PKType | ScalarSelect[PKType]) -> Select[tuple[ModelType]]:
+    def retrieve(self, entity_id: PKType | ScalarSelect[PKType]) -> Select[ModelType]:
         return self.list_(limit=1, filters=[Filter(field='id', op='=', value=entity_id)])
 
     def retrieve_by(
         self,
         filters: Iterable[Filters] = (),
         order_by: Iterable[OrderBy] = (),
-    ) -> Select[tuple[ModelType]]:
+    ) -> Select[ModelType]:
         query = self.select()
         query = self.add_filters(query, filters)
         query = self.add_order_by(query, order_by)
@@ -155,7 +156,7 @@ class BaseRepo[PKType, ModelType: GenericBaseModel]:
         self,
         entity_id: PKType | ScalarSelect[PKType],
         data: dict[str, object],
-    ) -> TypedReturnsRows[tuple[ModelType]]:
+    ) -> TypedReturnsRows[ModelType]:
         return self.update_by(
             data,
             filters=[Filter(field='id', op='eq', value=entity_id)],
@@ -165,24 +166,22 @@ class BaseRepo[PKType, ModelType: GenericBaseModel]:
         self,
         data: dict[str, object],
         filters: Iterable[Filters] = (),
-    ) -> TypedReturnsRows[tuple[ModelType]]:
+    ) -> TypedReturnsRows[ModelType]:
         query = update(self.model).values(**data)
         query = self.add_filters(query, filters)
         return query.returning(self.model).options(*self.load_options)
 
-    def hard_delete(self, entity_id: PKType) -> TypedReturnsRows[tuple[ModelType]]:
+    def hard_delete(self, entity_id: PKType) -> TypedReturnsRows[ModelType]:
         return self.hard_delete_by(
             filters=[Filter(field='id', op='eq', value=entity_id)],
         )
 
-    def hard_delete_by(
-        self, filters: Iterable[Filters] = ()
-    ) -> TypedReturnsRows[tuple[ModelType]]:
+    def hard_delete_by(self, filters: Iterable[Filters] = ()) -> TypedReturnsRows[ModelType]:
         query = delete(self.model)
         query = self.add_filters(query, filters)
         return query.returning(self.model).options(*self.load_options)
 
-    def number_of_records(self, filters: Iterable[Filters] = ()) -> Select[tuple[int]]:
+    def number_of_records(self, filters: Iterable[Filters] = ()) -> Select[int]:
         query = select(func.count()).select_from(self.model)
         query = self.add_filters(query, filters)
         return query
@@ -193,8 +192,8 @@ class BaseRepo[PKType, ModelType: GenericBaseModel]:
             query = cast(T, query.where(predicate))
         return query
 
-    def add_order_by[T: Any](self, query: Select[T], order_by: Iterable[OrderBy]) -> Select[T]:
-        orders: list[UnaryExpression[Any]] = []
+    def add_order_by[*Ts](self, query: Select[*Ts], order_by: Iterable[OrderBy]) -> Select[*Ts]:
+        orders: list[OrderByList | UnaryExpression[Any]] = []
         secondary_sort_model: type[ModelType] = self.model
 
         for order in order_by:
@@ -254,7 +253,7 @@ class SoftDeletableRepo[
     default_filters = (Filter(field='deleted_at', op='is', value=null()),)
 
     @override
-    def select(self) -> Select[tuple[ModelType]]:
+    def select(self) -> Select[ModelType]:
         return self.add_filters(super().select())
 
     @override
@@ -263,7 +262,7 @@ class SoftDeletableRepo[
         data: dict[str, Any],
         index_elements: Iterable[InstrumentedAttribute[Any]],
         index_where: Iterable[Filters] | None = None,
-    ) -> ReturningInsert[tuple[ModelType]]:
+    ) -> ReturningInsert[ModelType]:
         index_where = index_where or (Filter(field='deleted_at', op='is', value=null()),)
         return super().create_or_skip(
             data=data, index_elements=index_elements, index_where=index_where
@@ -277,7 +276,7 @@ class SoftDeletableRepo[
         update_include_fields: Iterable[str] | None = None,
         index_elements: Iterable[InstrumentedAttribute[Any]] | None = None,
         index_where: Iterable[Filters] | None = None,
-    ) -> ReturningInsert[tuple[ModelType]]: ...
+    ) -> ReturningInsert[ModelType]: ...
 
     @overload
     def upsert(
@@ -287,7 +286,7 @@ class SoftDeletableRepo[
         update_exclude_fields: Iterable[str] | None = None,
         index_elements: Iterable[InstrumentedAttribute[Any]] | None = None,
         index_where: Iterable[Filters] | None = None,
-    ) -> ReturningInsert[tuple[ModelType]]: ...
+    ) -> ReturningInsert[ModelType]: ...
 
     @override
     def upsert(
@@ -298,7 +297,7 @@ class SoftDeletableRepo[
         update_exclude_fields: Iterable[str] | None = None,
         index_elements: Iterable[InstrumentedAttribute[Any]] | None = None,
         index_where: Iterable[Filters] | None = None,
-    ) -> ReturningInsert[tuple[ModelType]]:
+    ) -> ReturningInsert[ModelType]:
         index_where = index_where or (Filter(field='deleted_at', op='is', value=null()),)
         validate_exclusive_presence(update_include_fields, update_exclude_fields)
         if update_include_fields is not None:
@@ -320,13 +319,13 @@ class SoftDeletableRepo[
     def soft_delete(
         self,
         entity_id: PKType,
-    ) -> TypedReturnsRows[tuple[ModelType]]:
+    ) -> TypedReturnsRows[ModelType]:
         return self.soft_delete_by([Filter(field='id', op='eq', value=entity_id)])
 
     def soft_delete_by(
         self,
         filters: Iterable[Filters] = (),
-    ) -> TypedReturnsRows[tuple[ModelType]]:
+    ) -> TypedReturnsRows[ModelType]:
         query = update(self.model).values({'deleted_at': now()})
         query = self.add_filters(query, filters)
         return query.returning(self.model)
@@ -334,13 +333,13 @@ class SoftDeletableRepo[
     def restore(
         self,
         entity_id: PKType,
-    ) -> TypedReturnsRows[tuple[ModelType]]:
+    ) -> TypedReturnsRows[ModelType]:
         return self.restore_by([Filter(field='id', op='eq', value=entity_id)])
 
     def restore_by(
         self,
         filters: Iterable[Filters] = (),
-    ) -> TypedReturnsRows[tuple[ModelType]]:
+    ) -> TypedReturnsRows[ModelType]:
         query = update(self.model).values({'deleted_at': None})
         for predicate in self._get_query_predicates(filters):
             query = query.where(predicate)

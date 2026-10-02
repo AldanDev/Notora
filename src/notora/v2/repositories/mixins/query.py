@@ -118,7 +118,7 @@ class SelectableMixin[ModelType: GenericBaseModel](LoadOptionsMixin[ModelType]):
         self,
         *,
         options: Iterable[OptionSpec[ModelType]] | None = None,
-    ) -> Select[tuple[ModelType]]:
+    ) -> Select[ModelType]:
         stmt = select(self.model)
         return self.apply_options(stmt, options)
 
@@ -138,9 +138,9 @@ class ListableMixin[ModelType: GenericBaseModel](
         offset: int = 0,
         ordering: Iterable[OrderSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
-        base_query: Select[tuple[ModelType]] | None = None,
+        base_query: Select[ModelType] | None = None,
         apply_default_filters: bool = True,
-    ) -> Select[tuple[ModelType]]:
+    ) -> Select[ModelType]:
         if base_query is None:
             stmt = self.select(options=options)
         else:
@@ -159,7 +159,7 @@ class ListableMixin[ModelType: GenericBaseModel](
             stmt = stmt.offset(offset)
         return stmt
 
-    def list_by_params(self, params: QueryParams[ModelType]) -> Select[tuple[ModelType]]:
+    def list_by_params(self, params: QueryParams[ModelType]) -> Select[ModelType]:
         return self.list(
             filters=params.filters,
             limit=params.limit,
@@ -189,7 +189,7 @@ class RetrievableMixin[PKType, ModelType: GenericBaseModel](
         pk: PKType,
         *,
         options: Iterable[OptionSpec[ModelType]] | None = None,
-    ) -> Select[tuple[ModelType]]:
+    ) -> Select[ModelType]:
         return self.list(
             filters=(cast(FilterClause, self.pk_column == pk),),
             limit=1,
@@ -203,7 +203,7 @@ class RetrievableMixin[PKType, ModelType: GenericBaseModel](
         ordering: Iterable[OrderSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
         apply_default_filters: bool = True,
-    ) -> Select[tuple[ModelType]]:
+    ) -> Select[ModelType]:
         stmt = self.select(options=options)
         stmt = self.apply_filters(stmt, filters, apply_default_filters=apply_default_filters)
         stmt = self.apply_ordering(stmt, ordering)
@@ -216,7 +216,7 @@ class RetrievableMixin[PKType, ModelType: GenericBaseModel](
         ordering: Iterable[OrderSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
         apply_default_filters: bool = True,
-    ) -> Select[tuple[ModelType]]:
+    ) -> Select[ModelType]:
         stmt = self.retrieve_by(
             filters=filters,
             ordering=ordering,
@@ -232,6 +232,6 @@ class CountableMixin[ModelType: GenericBaseModel](FilterableMixin[ModelType]):
         *,
         filters: Iterable[FilterSpec[ModelType]] | None = None,
         apply_default_filters: bool = True,
-    ) -> Select[tuple[int]]:
+    ) -> Select[int]:
         stmt = select(func.count()).select_from(self.model)
         return self.apply_filters(stmt, filters, apply_default_filters=apply_default_filters)

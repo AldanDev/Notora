@@ -69,7 +69,7 @@ class BaseService[  # noqa: PLR0904
         limit: int = 20,
         offset: int = 0,
         order_by: Iterable[OrderBy] = (),
-        base_query: Select[tuple[Any]] | None = None,
+        base_query: Select[Any] | None = None,
     ) -> Iterable[ModelClass]:
         query = self.repo.list_(
             filters=filters,
@@ -87,7 +87,7 @@ class BaseService[  # noqa: PLR0904
         limit: int = 20,
         offset: int = 0,
         order_by: Iterable[OrderBy] = (),
-        base_query: Select[tuple[Any]] | None = None,
+        base_query: Select[Any] | None = None,
     ) -> list[ModelResponseSchema]:
         results = await self.list_raw(
             session=session,
@@ -245,7 +245,7 @@ class BaseService[  # noqa: PLR0904
         offset: int,
     ) -> PaginatedResponseSchema[ModelResponseSchema]:
         data = self.serialize_many(await db_session.scalars(data_query))
-        count = (await db_session.execute(count_query)).scalar_one()
+        count: int = (await db_session.execute(count_query)).scalar_one()
         meta = PaginationMetaSchema.calculate(
             total=count,
             limit=limit,
@@ -373,7 +373,7 @@ class BaseService[  # noqa: PLR0904
     async def execute_for_one[T](
         self,
         db_session: AsyncSession,
-        query: TypedReturnsRows[tuple[T]],
+        query: TypedReturnsRows[T],
     ) -> T:
         result = await self.execute(db_session, query)
         if result is None:
@@ -383,7 +383,7 @@ class BaseService[  # noqa: PLR0904
     async def execute[T](
         self,
         db_session: AsyncSession,
-        query: TypedReturnsRows[tuple[T]],
+        query: TypedReturnsRows[T],
     ) -> T | None:
         try:
             entity = await db_session.execute(query)

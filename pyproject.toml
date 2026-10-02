@@ -23,7 +23,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries",
 ]
 dependencies = [
-    "sqlalchemy[asyncio]<3.0.0,>=2.0.44",
+    "sqlalchemy[asyncio]<3.0.0,>=2.1.2",
     "pydantic[email]<3.0.0,>=2.12.4",
 ]
 

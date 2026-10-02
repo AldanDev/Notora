@@ -63,7 +63,7 @@ class SessionExecutorMixin[PKType, ModelType: GenericBaseModel]:
     async def execute_for_one(
         self,
         session: AsyncSession,
-        statement: TypedReturnsRows[tuple[ModelType]],
+        statement: TypedReturnsRows[ModelType],
     ) -> ModelType:
         result = await self.execute(session, statement)
         entity = result.unique().scalar_one_or_none()
@@ -74,7 +74,7 @@ class SessionExecutorMixin[PKType, ModelType: GenericBaseModel]:
     async def execute_optional(
         self,
         session: AsyncSession,
-        statement: TypedReturnsRows[tuple[ModelType]],
+        statement: TypedReturnsRows[ModelType],
     ) -> ModelType | None:
         result = await self.execute(session, statement)
         return cast(ModelType | None, result.unique().scalar_one_or_none())
@@ -82,7 +82,7 @@ class SessionExecutorMixin[PKType, ModelType: GenericBaseModel]:
     async def execute_for_many(
         self,
         session: AsyncSession,
-        statement: TypedReturnsRows[tuple[ModelType]],
+        statement: TypedReturnsRows[ModelType],
     ) -> list[ModelType]:
         result = await self.execute(session, statement)
         return list(cast('ScalarResult[ModelType]', result.unique().scalars()).all())

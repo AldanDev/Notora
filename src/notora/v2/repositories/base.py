@@ -108,25 +108,23 @@ class RepositoryProtocol[PKType, ModelType: GenericBaseModel](Protocol):
         options: Iterable[OptionSpec[ModelType]] | None = None,
         base_query: Any | None = None,
         apply_default_filters: bool = ...,
-    ) -> TypedReturnsRows[tuple[ModelType]]: ...
+    ) -> TypedReturnsRows[ModelType]: ...
 
-    def list_by_params(
-        self, params: QueryParams[ModelType]
-    ) -> TypedReturnsRows[tuple[ModelType]]: ...
+    def list_by_params(self, params: QueryParams[ModelType]) -> TypedReturnsRows[ModelType]: ...
 
     def count(
         self,
         *,
         filters: Iterable[FilterSpec[ModelType]] | None = None,
         apply_default_filters: bool = ...,
-    ) -> TypedReturnsRows[tuple[int]]: ...
+    ) -> TypedReturnsRows[int]: ...
 
     def retrieve(
         self,
         pk: PKType,
         *,
         options: Iterable[OptionSpec[ModelType]] | None = None,
-    ) -> TypedReturnsRows[tuple[ModelType]]: ...
+    ) -> TypedReturnsRows[ModelType]: ...
 
     def retrieve_by(
         self,
@@ -135,7 +133,7 @@ class RepositoryProtocol[PKType, ModelType: GenericBaseModel](Protocol):
         ordering: Iterable[OrderSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
         apply_default_filters: bool = ...,
-    ) -> TypedReturnsRows[tuple[ModelType]]: ...
+    ) -> TypedReturnsRows[ModelType]: ...
 
     def retrieve_one_by(
         self,
@@ -144,21 +142,21 @@ class RepositoryProtocol[PKType, ModelType: GenericBaseModel](Protocol):
         ordering: Iterable[OrderSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
         apply_default_filters: bool = ...,
-    ) -> TypedReturnsRows[tuple[ModelType]]: ...
+    ) -> TypedReturnsRows[ModelType]: ...
 
     def create(
         self,
         payload: dict[str, Any],
         *,
         options: Iterable[OptionSpec[ModelType]] | None = None,
-    ) -> TypedReturnsRows[tuple[ModelType]]: ...
+    ) -> TypedReturnsRows[ModelType]: ...
 
     def bulk_create(
         self,
         payload: Sequence[dict[str, Any]],
         *,
         options: Iterable[OptionSpec[ModelType]] | None = None,
-    ) -> TypedReturnsRows[tuple[ModelType]]: ...
+    ) -> TypedReturnsRows[ModelType]: ...
 
     def create_or_skip(
         self,
@@ -167,7 +165,7 @@ class RepositoryProtocol[PKType, ModelType: GenericBaseModel](Protocol):
         conflict_columns: Sequence[InstrumentedAttribute[Any]],
         conflict_where: Iterable[FilterSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
-    ) -> TypedReturnsRows[tuple[ModelType]]: ...
+    ) -> TypedReturnsRows[ModelType]: ...
 
     def upsert(
         self,
@@ -178,7 +176,7 @@ class RepositoryProtocol[PKType, ModelType: GenericBaseModel](Protocol):
         update_only: Sequence[str] | None = None,
         update_exclude: Sequence[str] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
-    ) -> TypedReturnsRows[tuple[ModelType]]: ...
+    ) -> TypedReturnsRows[ModelType]: ...
 
     def update(
         self,
@@ -186,7 +184,7 @@ class RepositoryProtocol[PKType, ModelType: GenericBaseModel](Protocol):
         payload: dict[str, Any],
         *,
         options: Iterable[OptionSpec[ModelType]] | None = None,
-    ) -> TypedReturnsRows[tuple[ModelType]]: ...
+    ) -> TypedReturnsRows[ModelType]: ...
 
     def update_by(
         self,
@@ -194,21 +192,21 @@ class RepositoryProtocol[PKType, ModelType: GenericBaseModel](Protocol):
         *,
         filters: Iterable[FilterSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
-    ) -> TypedReturnsRows[tuple[ModelType]]: ...
+    ) -> TypedReturnsRows[ModelType]: ...
 
     def delete(
         self,
         pk: PKType,
         *,
         options: Iterable[OptionSpec[ModelType]] | None = None,
-    ) -> TypedReturnsRows[tuple[ModelType]]: ...
+    ) -> TypedReturnsRows[ModelType]: ...
 
     def delete_by(
         self,
         *,
         filters: Iterable[FilterSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
-    ) -> TypedReturnsRows[tuple[ModelType]]: ...
+    ) -> TypedReturnsRows[ModelType]: ...
 
 
 class SoftDeleteRepositoryProtocol[PKType, ModelType: GenericBaseModel](
@@ -221,7 +219,7 @@ class SoftDeleteRepositoryProtocol[PKType, ModelType: GenericBaseModel](
         *,
         options: Iterable[OptionSpec[ModelType]] | None = None,
         additional_payload: dict[str, Any] | None = None,
-    ) -> TypedReturnsRows[tuple[ModelType]]: ...
+    ) -> TypedReturnsRows[ModelType]: ...
 
     def soft_delete_by(
         self,
@@ -229,7 +227,7 @@ class SoftDeleteRepositoryProtocol[PKType, ModelType: GenericBaseModel](
         filters: Iterable[FilterSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
         additional_payload: dict[str, Any] | None = None,
-    ) -> TypedReturnsRows[tuple[ModelType]]: ...
+    ) -> TypedReturnsRows[ModelType]: ...
 
     def restore(
         self,
@@ -237,7 +235,7 @@ class SoftDeleteRepositoryProtocol[PKType, ModelType: GenericBaseModel](
         *,
         options: Iterable[OptionSpec[ModelType]] | None = None,
         additional_payload: dict[str, Any] | None = None,
-    ) -> TypedReturnsRows[tuple[ModelType]]: ...
+    ) -> TypedReturnsRows[ModelType]: ...
 
     def restore_by(
         self,
@@ -245,4 +243,4 @@ class SoftDeleteRepositoryProtocol[PKType, ModelType: GenericBaseModel](
         filters: Iterable[FilterSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
         additional_payload: dict[str, Any] | None = None,
-    ) -> TypedReturnsRows[tuple[ModelType]]: ...
+    ) -> TypedReturnsRows[ModelType]: ...

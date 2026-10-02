@@ -18,7 +18,7 @@ class CreateMixin[ModelType: GenericBaseModel](LoadOptionsMixin[ModelType]):
         payload: dict[str, Any],
         *,
         options: Iterable[OptionSpec[ModelType]] | None = None,
-    ) -> ReturningInsert[tuple[ModelType]]:
+    ) -> ReturningInsert[ModelType]:
         stmt = insert(self.model).values(**payload).returning(self.model)
         return self.apply_options(stmt, options)
 
@@ -27,7 +27,7 @@ class CreateMixin[ModelType: GenericBaseModel](LoadOptionsMixin[ModelType]):
         payload: Sequence[dict[str, Any]],
         *,
         options: Iterable[OptionSpec[ModelType]] | None = None,
-    ) -> ReturningInsert[tuple[ModelType]]:
+    ) -> ReturningInsert[ModelType]:
         stmt = insert(self.model).values(list(payload)).returning(self.model)
         return self.apply_options(stmt, options)
 
@@ -46,7 +46,7 @@ class UpsertMixin[PKType, ModelType: GenericBaseModel](
         update_only: Sequence[str] | None = None,
         update_exclude: Sequence[str] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
-    ) -> ReturningInsert[tuple[ModelType]]:
+    ) -> ReturningInsert[ModelType]:
         if update_only is not None and update_exclude is not None:
             msg = 'Only one of update_only or update_exclude can be provided.'
             raise ValueError(msg)
@@ -82,7 +82,7 @@ class CreateOrSkipMixin[ModelType: GenericBaseModel](
         conflict_columns: Sequence[InstrumentedAttribute[Any]],
         conflict_where: Iterable[FilterSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
-    ) -> ReturningInsert[tuple[ModelType]]:
+    ) -> ReturningInsert[ModelType]:
         stmt = pg_insert(self.model).values(**payload)
         clauses = self.merge_filters(conflict_where)
         where_clause = and_(*clauses) if clauses else None
@@ -104,7 +104,7 @@ class UpdateMixin[PKType, ModelType: GenericBaseModel](
         *,
         filters: Iterable[FilterSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
-    ) -> TypedReturnsRows[tuple[ModelType]]:
+    ) -> TypedReturnsRows[ModelType]:
         stmt = update(self.model).values(**payload)
         stmt = self.apply_filters(stmt, filters)
         stmt = stmt.returning(self.model)
@@ -116,7 +116,7 @@ class UpdateMixin[PKType, ModelType: GenericBaseModel](
         payload: dict[str, Any],
         *,
         options: Iterable[OptionSpec[ModelType]] | None = None,
-    ) -> TypedReturnsRows[tuple[ModelType]]:
+    ) -> TypedReturnsRows[ModelType]:
         filters = (cast(FilterClause, self.pk_column == pk),)
         return self.update_by(payload, filters=filters, options=options)
 
@@ -131,7 +131,7 @@ class DeleteMixin[PKType, ModelType: GenericBaseModel](
         *,
         filters: Iterable[FilterSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
-    ) -> TypedReturnsRows[tuple[ModelType]]:
+    ) -> TypedReturnsRows[ModelType]:
         stmt = delete(self.model)
         stmt = self.apply_filters(stmt, filters)
         returning_stmt = stmt.returning(self.model)
@@ -142,7 +142,7 @@ class DeleteMixin[PKType, ModelType: GenericBaseModel](
         pk: PKType,
         *,
         options: Iterable[OptionSpec[ModelType]] | None = None,
-    ) -> TypedReturnsRows[tuple[ModelType]]:
+    ) -> TypedReturnsRows[ModelType]:
         filters = (cast(FilterClause, self.pk_column == pk),)
         return self.delete_by(filters=filters, options=options)
 
@@ -156,7 +156,7 @@ class SoftDeleteMixin[PKType, ModelType: GenericBaseModel](UpdateMixin[PKType, M
         filters: Iterable[FilterSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
         additional_payload: dict[str, Any] | None = None,
-    ) -> TypedReturnsRows[tuple[ModelType]]:
+    ) -> TypedReturnsRows[ModelType]:
         payload: dict[str, Any] = {self.deleted_attribute: func.now()}
         if additional_payload:
             payload.update(additional_payload)
@@ -168,7 +168,7 @@ class SoftDeleteMixin[PKType, ModelType: GenericBaseModel](UpdateMixin[PKType, M
         *,
         options: Iterable[OptionSpec[ModelType]] | None = None,
         additional_payload: dict[str, Any] | None = None,
-    ) -> TypedReturnsRows[tuple[ModelType]]:
+    ) -> TypedReturnsRows[ModelType]:
         filters = (cast(FilterClause, self.pk_column == pk),)
         return self.soft_delete_by(
             filters=filters,
@@ -182,7 +182,7 @@ class SoftDeleteMixin[PKType, ModelType: GenericBaseModel](UpdateMixin[PKType, M
         filters: Iterable[FilterSpec[ModelType]] | None = None,
         options: Iterable[OptionSpec[ModelType]] | None = None,
         additional_payload: dict[str, Any] | None = None,
-    ) -> TypedReturnsRows[tuple[ModelType]]:
+    ) -> TypedReturnsRows[ModelType]:
         payload: dict[str, Any] = {self.deleted_attribute: None}
         if additional_payload:
             payload.update(additional_payload)
@@ -197,7 +197,7 @@ class SoftDeleteMixin[PKType, ModelType: GenericBaseModel](UpdateMixin[PKType, M
         *,
         options: Iterable[OptionSpec[ModelType]] | None = None,
         additional_payload: dict[str, Any] | None = None,
-    ) -> TypedReturnsRows[tuple[ModelType]]:
+    ) -> TypedReturnsRows[ModelType]:
         filters = (cast(FilterClause, self.pk_column == pk),)
         return self.restore_by(
             filters=filters,

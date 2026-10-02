@@ -210,7 +210,7 @@ class BaseRepo[PKType, ModelType: GenericBaseModel]:
 
         return query.order_by(*orders, secondary_sort_model.id)
 
-    def _get_query_predicates(self, filters: Iterable[Filters]) -> Iterable[Any]:  # noqa: C901, PLR0912
+    def _get_query_predicates(self, filters: Iterable[Filters]) -> Iterable[Any]:  # ruff: ignore[complex-structure, too-many-branches]
         predicates = []
         for filter_ in filters:
             match filter_:

@@ -35,7 +35,7 @@ Issues = "https://github.com/AldanDev/Notora/issues"
 [dependency-groups]
 lint = [
     "mypy>=1.18.2,<3.0.0",
-    "ruff<1.0.0,>=0.14.5",
+    "ruff<1.0.0,>=0.16.10",
     "pyright<2.0.0,>=1.1.407",
 ]
 tests = [
@@ -62,11 +62,11 @@ fix = true
 lint.preview = true
 lint.ignore = [
     "D10",  # docstrings
-    "D203",  # one-blank-line-before-class
-    "D213",  # multi-line-summary-second-line
-    "D401",  # docstrings imperative mood
-    "COM812",  # missing-trailing-comma
-    "PLW3201",  # bad-dunder-method-name
+    "incorrect-blank-line-before-class",  # one-blank-line-before-class
+    "multi-line-summary-second-line",  # multi-line-summary-second-line
+    "non-imperative-mood",  # docstrings imperative mood
+    "missing-trailing-comma",  # missing-trailing-comma
+    "bad-dunder-method-name",  # bad-dunder-method-name
 ]
 lint.select = [
     "FAST",  # fastapi
@@ -101,7 +101,7 @@ lint.pylint.max-positional-args = 7
 lint.pylint.max-args = 10
 lint.flake8-quotes.inline-quotes = "single"
 lint.flake8-implicit-str-concat.allow-multiline = false
-lint.per-file-ignores = { "__init__.py" = ["F401", "F403"], "**/test_*.py" = ["PLR091"] }
+lint.per-file-ignores = { "__init__.py" = ["unused-import", "undefined-local-with-import-star"], "**/test_*.py" = ["PLR091"] }
 format.preview = true
 format.quote-style = "single"
 

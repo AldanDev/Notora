@@ -52,7 +52,7 @@ class ManyToManySyncMixin[PKType, ModelType: GenericBaseModel](
                 relation_payload[relation.payload_field] = data.pop(relation.payload_field) or ()
         return data, relation_payload
 
-    async def sync_m2m_relations(  # noqa: C901, PLR0912
+    async def sync_m2m_relations(  # ruff: ignore[complex-structure, too-many-branches]
         self,
         session: AsyncSession,
         owner_id: PKType,
